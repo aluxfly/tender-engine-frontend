@@ -40,7 +40,7 @@
     <section class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 class="text-3xl font-bold">物联网卡 & 布控球招标</h1>
-            <p class="mt-2 text-blue-100">每天更新，完全免费</p>
+            <p class="mt-2 text-blue-100">更新时间：<span id="lastUpdate">加载中...</span></p>
         </div>
     </section>
 
@@ -109,7 +109,7 @@
                     </div>
                     <div class="mt-4 flex justify-between items-center">
                         <a href="${p.url || '#'}" target="_blank" class="text-primary hover:underline text-sm">查看原文 →</a>
-                        <a href="project-detail.html?id=${p.id}" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium transition">详情</a>
+                        <a href="project-detail?id=${p.id}" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium transition">详情</a>
                     </div>
                 </div>
             `).join('');
@@ -261,6 +261,14 @@
             renderProjects(allProjects);
             const countEl = document.querySelector('.text-gray-600 .font-bold');
             if (countEl) countEl.textContent = allProjects.length;
+            
+            // 更新最新发布时间
+            const dates = allProjects.map(p => p.publish_date).filter(d => d);
+            if (dates.length > 0) {
+                const latestDate = dates.sort().reverse()[0];
+                const updateEl = document.getElementById('lastUpdate');
+                if (updateEl) updateEl.textContent = latestDate;
+            }
         } catch (e) {
             console.error('加载失败:', e);
             document.getElementById('projects-container').innerHTML = '<div class="text-center text-gray-500 col-span-3">加载失败</div>';
