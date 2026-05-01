@@ -87,7 +87,7 @@
     
     async function loadProjects() {
         try {
-            const API_URL = 'https://tender-engine-backend-production.up.railway.app/api/projects';
+            const API_URL = 'https://tender-engine-backend-production.up.railway.app/api/projects?limit=500';
             const response = await fetch(API_URL);
             const data = await response.json();
             allProjects = Array.isArray(data) ? data : data.projects || [];
