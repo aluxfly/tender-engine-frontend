@@ -67,11 +67,18 @@
     </section>
 
     <!-- 项目列表 -->
-    <section class="pb-20">
+    <section class="pb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div id="projects-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="text-center text-gray-500 col-span-3">加载中...</div>
             </div>
+        </div>
+    </section>
+
+    <!-- 分页导航 -->
+    <section class="pb-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div id="pagination" class="flex justify-center items-center gap-2 mt-8"></div>
         </div>
     </section>
 
@@ -84,6 +91,9 @@
 
     <script>
     let allProjects = [];
+    let filteredProjects = [];
+    let currentPage = 1;
+    const perPage = 18;
     
     async function loadProjects() {
         try {
@@ -91,9 +101,15 @@
             const response = await fetch(API_URL);
             const data = await response.json();
             allProjects = Array.isArray(data) ? data : data.projects || [];
-            renderProjects(allProjects);
-            const countEl = document.querySelector('.text-gray-600 .font-bold');
-            if (countEl) countEl.textContent = allProjects.length;
+            // 按发布日期倒序排列，最新的在最前面
+            allProjects.sort((a, b) => {
+                const da = a.publish_date || a.publishDate || '';
+                const db = b.publish_date || b.publishDate || '';
+                return db.localeCompare(da);
+            });
+            filteredProjects = allProjects;
+            currentPage = 1;
+            renderPage();
             
             // 更新最新发布时间
             const dates = allProjects.map(p => p.publish_date).filter(d => d);
@@ -113,8 +129,19 @@
         if (!container) return;
         if (projects.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 col-span-3">暂无项目</div>';
+            document.getElementById('pagination').innerHTML = '';
             return;
         }
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+        const pageItems = projects.slice(start, end);
+        renderProjectCards(pageItems);
+        renderPagination(projects.length);
+    }
+
+    function renderProjectCards(projects) {
+        const container = document.getElementById('projects-container');
+        if (!container) return;
         container.innerHTML = projects.map(p => {
             // 根据来源平台设置不同的标签样式
             let sourceLabel = '';
@@ -158,6 +185,62 @@
             </div>
         `}).join('');
     }
+
+    function renderPagination(total) {
+        const paginationEl = document.getElementById('pagination');
+        if (!paginationEl) return;
+        const totalPages = Math.ceil(total / perPage);
+        if (totalPages <= 1) { paginationEl.innerHTML = ''; return; }
+
+        const startNum = (currentPage - 1) * perPage + 1;
+        const endNum = Math.min(currentPage * perPage, total);
+        let html = `<span class="text-gray-500 text-sm mr-4">显示 ${startNum}-${endNum} / 共 ${total} 条</span>`;
+
+        // 上一页
+        html += `<button onclick="goPage(${currentPage - 1})" class="px-3 py-2 rounded-lg border ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}" ${currentPage === 1 ? 'disabled' : ''}>‹ 上一页</button>`;
+
+        // 页码
+        let pages = [];
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (currentPage > 3) pages.push('...');
+            let s = Math.max(2, currentPage - 1);
+            let e = Math.min(totalPages - 1, currentPage + 1);
+            if (currentPage <= 3) { s = 2; e = 4; }
+            if (currentPage >= totalPages - 2) { s = totalPages - 3; e = totalPages - 1; }
+            for (let i = s; i <= e; i++) pages.push(i);
+            if (currentPage < totalPages - 2) pages.push('...');
+            pages.push(totalPages);
+        }
+        for (const p of pages) {
+            if (p === '...') {
+                html += `<span class="px-2 text-gray-400">…</span>`;
+            } else {
+                html += `<button onclick="goPage(${p})" class="w-10 h-10 rounded-lg font-medium transition ${p === currentPage ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'}">${p}</button>`;
+            }
+        }
+
+        // 下一页
+        html += `<button onclick="goPage(${currentPage + 1})" class="px-3 py-2 rounded-lg border ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}" ${currentPage === totalPages ? 'disabled' : ''}>下一页 ›</button>`;
+
+        paginationEl.innerHTML = html;
+    }
+
+    function goPage(page) {
+        const totalPages = Math.ceil(filteredProjects.length / perPage);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderPage();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderPage() {
+        const countEl = document.querySelector('.text-gray-600 .font-bold');
+        if (countEl) countEl.textContent = filteredProjects.length;
+        renderProjects(filteredProjects);
+    }
     
     function setupSearch() {
         const input = document.querySelector('input[type="text"]');
@@ -165,9 +248,14 @@
             input.addEventListener('input', e => {
                 const term = e.target.value.toLowerCase();
                 const filtered = allProjects.filter(p => (p.name||'').toLowerCase().includes(term) || (p.description||'').toLowerCase().includes(term));
-                renderProjects(filtered);
-                const countEl = document.querySelector('.text-gray-600 .font-bold');
-                if (countEl) countEl.textContent = filtered.length;
+                filtered.sort((a, b) => {
+                    const da = a.publish_date || a.publishDate || '';
+                    const db = b.publish_date || b.publishDate || '';
+                    return db.localeCompare(da);
+                });
+                filteredProjects = filtered;
+                currentPage = 1;
+                renderPage();
             });
         }
     }
@@ -183,9 +271,15 @@
         try {
             const response = await fetch(url);
             const projects = await response.json();
-            renderProjects(projects);
-            const countEl = document.querySelector('.text-gray-600 .font-bold');
-            if (countEl) countEl.textContent = projects.length;
+            // 按发布日期倒序排列，最新的在最前面
+            projects.sort((a, b) => {
+                const da = a.publish_date || a.publishDate || '';
+                const db = b.publish_date || b.publishDate || '';
+                return db.localeCompare(da);
+            });
+            filteredProjects = projects;
+            currentPage = 1;
+            renderPage();
         } catch (e) {
             console.error('加载失败:', e);
         }
