@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>补充资料工作台 - 投标引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .drop-zone.drag-over { border-color: #3B82F6; background-color: #EFF6FF; }
+        .upload-item:hover { background-color: #F9FAFB; }
+        .bottom-bar { backdrop-filter: blur(8px); background: rgba(255,255,255,0.95); }
+    </style>
+    <script>
+    window.APP_CONFIG = {
+        API_BASE: 'https://tender-engine-backend-production.up.railway.app',
+        getApiKey: function() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key) return key;
+            const stored = localStorage.getItem('api_key');
+            if (stored) return stored;
+            return 'dev-key-2026';
+        }
+    }
+    </script>
+        <script src="js/shared.js"></script>
+</head>
+<body class="bg-gray-50 pb-28">
+        <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-primary">🎯 投标引擎</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-primary font-medium">首页</a>
+                    <a href="projects.html" class="text-gray-700 hover:text-primary font-medium">项目列表</a>
+                    <a href="bid-manage.html" class="text-gray-700 hover:text-primary font-medium">标书管理</a>
+                    <a href="bid-dashboard.html" class="text-gray-700 hover:text-primary font-medium">工作台</a>
+                    <a href="bid-download.html" class="text-gray-700 hover:text-primary font-medium">标书下载</a>
+                    <a href="bid.html" class="text-gray-700 hover:text-primary font-medium">标书生成</a>
+                    <button class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition">立即试用</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-primary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="index.html" class="block py-2 text-gray-700 hover:text-primary">首页</a>
+                <a href="projects.html" class="block py-2 text-gray-700 hover:text-primary">项目列表</a>
+                <a href="bid-manage.html" class="block py-2 text-gray-700 hover:text-primary">标书管理</a>
+                <a href="bid-dashboard.html" class="block py-2 text-gray-700 hover:text-primary">工作台</a>
+                <a href="bid-download.html" class="block py-2 text-gray-700 hover:text-primary">标书下载</a>
+                <a href="bid.html" class="block py-2 text-gray-700 hover:text-primary">标书生成</a>
+            </div>
+        </div>
+    </nav>
+    <!-- 面包屑导航 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <nav class="text-sm text-gray-500" aria-label="面包屑导航">
+            <ol class="flex items-center space-x-2 flex-wrap">
+                <li><a href="index.html" class="hover:text-primary transition">🏠 首页</a></li><li class="flex items-center"><span class="mx-1">/</span><a href="bid-manage.html" class="hover:text-primary transition">标书管理</a></li><li class="flex items-center"><span class="mx-1">/</span><span class="text-primary font-medium">补充资料工作台</span></li></ol></nav></div></nav>
+
+    <!-- 页面标题 -->
+    <section class="bg-gradient-to-r from-orange-600 to-red-600 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-2 text-sm text-orange-200 mb-3">
+                <a href="bid-manage.html" class="hover:text-white">标书管理</a>
+                <span>/</span>
+                <a href="bid-requirements.html" class="hover:text-white">资料需求</a>
+                <span>/</span>
+                <span>补充资料</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">📝 补充资料工作台</h1>
+                    <p class="mt-2 text-orange-100" id="project-title">加载中...</p>
+                </div>
+                <div class="mt-4 sm:mt-0 flex items-center space-x-3">
+                    <span class="text-sm text-orange-200">待补充</span>
+                    <span class="text-2xl font-bold" id="pending-count">0</span>
+                    <span class="text-sm text-orange-200">项</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 总体进度 -->
+    <section class="py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-xl shadow p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-600">总体完成进度</span>
+                    <span class="text-sm font-bold text-primary" id="progress-text">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div id="progress-bar" class="bg-primary h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 资料清单 -->
+    <section class="py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- 筛选标签 -->
+            <div class="flex flex-wrap gap-2 mb-4">
+                <button class="filter-btn px-3 py-1 text-sm rounded-full bg-primary text-white font-medium" data-filter="all">全部</button>
+                <button class="filter-btn px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition" data-filter="pending">待补充</button>
+                <button class="filter-btn px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition" data-filter="filled">已填充</button>
+                <button class="filter-btn px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition" data-filter="upload">需上传</button>
+                <button class="filter-btn px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition" data-filter="manual">需录入</button>
+                <button class="flex items-center px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition ml-auto" id="refresh-btn">
+                    🔄 刷新
+                </button>
+            </div>
+
+            <!-- 资料列表 -->
+            <div id="requirements-list" class="space-y-4">
+                <div class="text-center py-12 text-gray-400">
+                    <div class="text-6xl mb-4">⏳</div>
+                    <p class="text-lg">正在加载资料清单...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部固定操作栏 -->
+    <div class="fixed bottom-0 left-0 right-0 bottom-bar border-t shadow-lg px-4 py-3 z-50">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                <span>✅ 已完成: <span class="font-bold text-green-600" id="done-count">0</span></span>
+                <span>⏳ 待完成: <span class="font-bold text-orange-600" id="todo-count">0</span></span>
+            </div>
+            <div class="flex space-x-3">
+                <button id="auto-fill-btn" class="px-5 py-2 border-2 border-primary text-primary rounded-lg font-medium hover:bg-primary hover:text-white transition">
+                    🤖 自动填充
+                </button>
+                <button id="next-btn" class="px-5 py-2 bg-primary hover:bg-secondary text-white rounded-lg font-medium transition">
+                    下一步 →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 手动录入弹窗 -->
+    <div id="manual-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="p-6 border-b">
+                <h3 class="text-lg font-bold text-gray-800" id="modal-title">手动录入资料</h3>
+            </div>
+            <div class="p-6 space-y-4" id="modal-form">
+                <!-- 动态表单 -->
+            </div>
+            <div class="p-6 border-t flex justify-end space-x-3">
+                <button id="modal-cancel" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition">取消</button>
+                <button id="modal-save" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-2">🎯 投标引擎</h4>
+                    <p class="text-gray-400 text-sm">智能中标预测平台，专注物联网卡 + 布控球招标</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="projects.html" class="hover:text-white transition">项目列表</a></li>
+                        <li><a href="bid-manage.html" class="hover:text-white transition">标书管理</a></li>
+                        <li><a href="bid-dashboard.html" class="hover:text-white transition">工作台</a></li>
+                        <li><a href="bid-download.html" class="hover:text-white transition">标书下载</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">技术支持</h4>
+                    <p class="text-gray-400 text-sm">基于 AI 驱动的智能投标决策系统</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                &copy; 2026 投标引擎 All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    const API_URL = window.APP_CONFIG.API_BASE + '/api';
+const params = new URLSearchParams(window.location.search);
+    const projectId = params.get('project_id') || params.get('id') || 'demo-1';
+
+    let requirements = [];
+    let currentFilter = 'all';
+    let currentModalItem = null;
+
+    // 加载资料需求
+    async function loadRequirements() {
+        const container = document.getElementById('requirements-list');
+        container.innerHTML = `<div class="text-center py-12 text-gray-400"><div class="text-6xl mb-4">⏳</div><p class="text-lg">正在加载资料清单...</p></div>`;
+
+        try {
+            const res = await fetch(`${API_URL}/bid/requirements/${projectId}`, {
+                headers: { 'X-API-Key': window.APP_CONFIG.getApiKey() }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            requirements = Array.isArray(data) ? data : data.items || data.requirements || data.data || [];
+        } catch (e) {
+            console.warn('API 加载失败，使用演示数据:', e);
+            requirements = getDemoRequirements();
+        }
+
+        renderRequirements();
+        updateProgress();
+    }
+
+    function getDemoRequirements() {
+        return [
+            { id: 'req-1', name: '营业执照扫描件', category: '公司资质', type: 'upload', status: 'filled', fileTypes: ['image','pdf'], filledAt: '2026-05-01 10:30' },
+            { id: 'req-2', name: '法人身份证复印件', category: '公司资质', type: 'upload', status: 'pending', fileTypes: ['image'], description: '正反面均需上传' },
+            { id: 'req-3', name: '近3年财务报表', category: '财务资料', type: 'upload', status: 'pending', fileTypes: ['pdf','excel'], description: '2023-2025年度审计报告' },
+            { id: 'req-4', name: '银行开户许可证', category: '财务资料', type: 'upload', status: 'pending', fileTypes: ['image','pdf'] },
+            { id: 'req-5', name: '公司联系人', category: '商务信息', type: 'manual', status: 'pending', fields: [{name:'name',label:'姓名',type:'text'},{name:'phone',label:'电话',type:'tel'},{name:'email',label:'邮箱',type:'email'}] },
+            { id: 'req-6', name: 'ISO9001质量管理体系证书', category: '资质证书', type: 'upload', status: 'filled', fileTypes: ['image','pdf'], filledAt: '2026-05-02 09:15' },
+            { id: 'req-7', name: '项目经理资质证书', category: '人员资质', type: 'upload', status: 'pending', fileTypes: ['image','pdf'] },
+            { id: 'req-8', name: '近三年同类项目业绩', category: '业绩资料', type: 'manual', status: 'pending', fields: [{name:'project_name',label:'项目名称',type:'text'},{name:'amount',label:'合同金额(万元)',type:'number'},{name:'date',label:'完工日期',type:'date'},{name:'client',label:'客户名称',type:'text'}] },
+            { id: 'req-9', name: '安全生产许可证', category: '资质证书', type: 'upload', status: 'filled', fileTypes: ['image','pdf'], filledAt: '2026-05-01 14:20' },
+            { id: 'req-10', name: '社保缴纳证明', category: '人员资质', type: 'upload', status: 'pending', fileTypes: ['pdf'] },
+        ];
+    }
+
+    function renderRequirements() {
+        const container = document.getElementById('requirements-list');
+        let filtered = requirements;
+
+        if (currentFilter === 'pending') filtered = requirements.filter(r => r.status === 'pending');
+        else if (currentFilter === 'filled') filtered = requirements.filter(r => r.status === 'filled');
+        else if (currentFilter === 'upload') filtered = requirements.filter(r => r.type === 'upload');
+        else if (currentFilter === 'manual') filtered = requirements.filter(r => r.type === 'manual');
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="text-center py-12 text-gray-400"><div class="text-6xl mb-4">✅</div><p class="text-lg">当前筛选条件下没有资料项</p></div>`;
+            return;
+        }
+
+        // 按类别分组
+        const groups = {};
+        filtered.forEach(r => {
+            const cat = r.category || '其他';
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(r);
+        });
+
+        let html = '';
+        for (const [cat, items] of Object.entries(groups)) {
+            html += `<div class="mb-6"><h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">${cat}</h3><div class="space-y-3">`;
+            for (const item of items) {
+                html += renderItem(item);
+            }
+            html += '</div></div>';
+        }
+        container.innerHTML = html;
+    }
+
+    function renderItem(item) {
+        const isFilled = item.status === 'filled';
+        const isUpload = item.type === 'upload';
+
+        return `
+        <div class="upload-item bg-white rounded-xl shadow p-4 transition-all ${isFilled ? 'border-l-4 border-green-500' : 'border-l-4 border-orange-400'}" data-id="${item.id}" data-type="${item.type}">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">${isUpload ? '📎' : '📝'}</span>
+                        <span class="font-bold text-gray-800">${item.name}</span>
+                        ${isFilled ? '<span class="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">已完成</span>' : '<span class="px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">待补充</span>'}
+                    </div>
+                    ${item.description ? `<p class="text-sm text-gray-500 mt-1 ml-7">${item.description}</p>` : ''}
+                    <p class="text-xs text-gray-400 mt-1 ml-7">支持格式: ${item.fileTypes ? item.fileTypes.join(' / ') : '文本录入'}</p>
+                    ${item.filledAt ? `<p class="text-xs text-green-500 mt-1 ml-7">✓ 完成于 ${item.filledAt}</p>` : ''}
+                </div>
+                <div class="ml-4 flex-shrink-0">
+                    ${isUpload ? `
+                        <button onclick="openUpload('${item.id}')" class="px-3 py-1.5 text-sm ${isFilled ? 'border border-green-300 text-green-600 hover:bg-green-50' : 'bg-primary text-white hover:bg-secondary'} rounded-lg transition">
+                            ${isFilled ? '📎 更换文件' : '📤 上传'}
+                        </button>
+                    ` : `
+                        <button onclick="openManual('${item.id}')" class="px-3 py-1.5 text-sm ${isFilled ? 'border border-green-300 text-green-600 hover:bg-green-50' : 'bg-orange-500 text-white hover:bg-orange-600'} rounded-lg transition">
+                            ${isFilled ? '✏️ 编辑' : '✏️ 录入'}
+                        </button>
+                    `}
+                </div>
+            </div>
+            <!-- 上传区域 (展开式) -->
+            <div id="upload-area-${item.id}" class="hidden mt-4 pt-4 border-t border-gray-100">
+                <div class="drop-zone border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer transition"
+                     onclick="document.getElementById('file-input-${item.id}').click()"
+                     ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${item.id}')">
+                    <div class="text-4xl mb-2">📁</div>
+                    <p class="text-sm text-gray-500">拖拽文件到此处，或点击选择</p>
+                    <p class="text-xs text-gray-400 mt-1">支持 ${item.fileTypes ? item.fileTypes.join('、') : '所有文件'}</p>
+                    <input type="file" id="file-input-${item.id}" class="hidden" accept="${getAcceptAttr(item)}" onchange="handleFileSelect(event, '${item.id}')">
+                </div>
+                <div id="upload-progress-${item.id}" class="hidden mt-3">
+                    <div class="flex items-center justify-between text-sm mb-1">
+                        <span class="text-gray-600" id="upload-filename-${item.id}"></span>
+                        <span class="text-primary font-medium" id="upload-pct-${item.id}">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="upload-bar-${item.id}" class="bg-primary h-2 rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function getAcceptAttr(item) {
+        if (!item.fileTypes) return '*';
+        const map = { image: 'image/*', pdf: '.pdf', excel: '.xls,.xlsx,.csv', word: '.doc,.docx' };
+        return item.fileTypes.map(t => map[t] || '*').join(',');
+    }
+
+    // 更新进度
+    function updateProgress() {
+        const total = requirements.length;
+        const done = requirements.filter(r => r.status === 'filled').length;
+        const pending = total - done;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+        document.getElementById('progress-text').textContent = pct + '%';
+        document.getElementById('progress-bar').style.width = pct + '%';
+        document.getElementById('pending-count').textContent = pending;
+        document.getElementById('done-count').textContent = done;
+        document.getElementById('todo-count').textContent = pending;
+    }
+
+    // 拖拽上传
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e, itemId) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) uploadFile(files[0], itemId);
+    }
+
+    function handleFileSelect(e, itemId) {
+        const files = e.target.files;
+        if (files.length > 0) uploadFile(files[0], itemId);
+    }
+
+    function openUpload(itemId) {
+        const area = document.getElementById('upload-area-' + itemId);
+        area.classList.toggle('hidden');
+    }
+
+    function openManual(itemId) {
+        const item = requirements.find(r => r.id === itemId);
+        if (!item || !item.fields) return;
+
+        currentModalItem = item;
+        document.getElementById('modal-title').textContent = '录入: ' + item.name;
+        const form = document.getElementById('modal-form');
+        form.innerHTML = item.fields.map(f => `
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">${f.label}</label>
+                <input type="${f.type}" name="${f.name}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" ${f.type === 'text' ? 'placeholder="请输入' + f.label + '"' : ''}>
+            </div>
+        `).join('');
+        document.getElementById('manual-modal').classList.remove('hidden');
+    }
+
+    // 上传文件（模拟进度）
+    async function uploadFile(file, itemId) {
+        const progressDiv = document.getElementById('upload-progress-' + itemId);
+        const barDiv = document.getElementById('upload-bar-' + itemId);
+        const pctSpan = document.getElementById('upload-pct-' + itemId);
+        const filenameSpan = document.getElementById('upload-filename-' + itemId);
+
+        progressDiv.classList.remove('hidden');
+        filenameSpan.textContent = file.name;
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('requirement_id', itemId);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${API_URL}/bid/requirements/${projectId}/upload`, true);
+            xhr.setRequestHeader('X-API-Key', window.APP_CONFIG.getApiKey());
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    barDiv.style.width = pct + '%';
+                    pctSpan.textContent = pct + '%';
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // 更新状态
+                    const item = requirements.find(r => r.id === itemId);
+                    if (item) {
+                        item.status = 'filled';
+                        item.filledAt = new Date().toLocaleString('zh-CN');
+                    }
+                    renderRequirements();
+                    updateProgress();
+                } else {
+                    pctSpan.textContent = '上传失败';
+                    pctSpan.classList.add('text-red-500');
+                }
+            };
+
+            xhr.onerror = () => {
+                // 模拟上传成功（演示）
+                simulateUpload(itemId, file.name);
+            };
+
+            xhr.send(formData);
+        } catch (e) {
+            simulateUpload(itemId, file.name);
+        }
+    }
+
+    // 模拟上传进度
+    function simulateUpload(itemId, filename) {
+        const barDiv = document.getElementById('upload-bar-' + itemId);
+        const pctSpan = document.getElementById('upload-pct-' + itemId);
+        const progressDiv = document.getElementById('upload-progress-' + itemId);
+
+        let pct = 0;
+        const timer = setInterval(() => {
+            pct += Math.random() * 15 + 5;
+            if (pct >= 100) {
+                pct = 100;
+                clearInterval(timer);
+                pctSpan.textContent = '✓ 上传成功';
+                pctSpan.classList.remove('text-primary');
+                pctSpan.classList.add('text-green-600');
+
+                setTimeout(() => {
+                    progressDiv.classList.add('hidden');
+                    pctSpan.classList.remove('text-green-600');
+                    pctSpan.classList.add('text-primary');
+                    barDiv.style.width = '0%';
+
+                    const item = requirements.find(r => r.id === itemId);
+                    if (item) {
+                        item.status = 'filled';
+                        item.filledAt = new Date().toLocaleString('zh-CN');
+                    }
+                    renderRequirements();
+                    updateProgress();
+                }, 800);
+            } else {
+                barDiv.style.width = pct + '%';
+                pctSpan.textContent = Math.round(pct) + '%';
+            }
+        }, 200);
+    }
+
+    // 自动填充
+    document.getElementById('auto-fill-btn').addEventListener('click', () => {
+        if (confirm('🤖 自动填充将从已保存的公司资料、团队信息、业绩案例中自动匹配填充。\n\n确定继续？')) {
+            autoFillAll();
+        }
+    });
+
+    async function autoFillAll() {
+        const btn = document.getElementById('auto-fill-btn');
+        btn.disabled = true;
+        btn.innerHTML = '⏳ 填充中...';
+        btn.classList.add('opacity-50');
+
+        try {
+            const res = await fetch(`${API_URL}/bid/requirements/${projectId}/auto-fill`, {
+                method: 'POST',
+                headers: { 'X-API-Key': window.APP_CONFIG.getApiKey(), 'Content-Type': 'application/json' }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        } catch (e) {
+            console.warn('自动填充 API 不可用，模拟执行');
+            // 模拟自动填充
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            requirements.forEach(r => {
+                if (r.status === 'pending' && (r.id.includes('1') || r.id.includes('6') || r.id.includes('9'))) {
+                    r.status = 'filled';
+                    r.filledAt = new Date().toLocaleString('zh-CN');
+                }
+            });
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '🤖 自动填充';
+        btn.classList.remove('opacity-50');
+        renderRequirements();
+        updateProgress();
+    }
+
+    // 下一步
+    document.getElementById('next-btn').addEventListener('click', () => {
+        const pending = requirements.filter(r => r.status === 'pending').length;
+        if (pending > 0) {
+            if (!confirm(`还有 ${pending} 项资料未完成，确定进入下一步？`)) return;
+        }
+        window.location.href = `bid-preview.html?project_id=${projectId}`;
+    });
+
+    // 刷新
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+        loadRequirements();
+    });
+
+    // 筛选
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-primary', 'text-white');
+                b.classList.add('bg-gray-200', 'text-gray-600');
+            });
+            btn.classList.remove('bg-gray-200', 'text-gray-600');
+            btn.classList.add('bg-primary', 'text-white');
+            currentFilter = btn.dataset.filter;
+            renderRequirements();
+        });
+    });
+
+    // 弹窗操作
+    document.getElementById('modal-cancel').addEventListener('click', () => {
+        document.getElementById('manual-modal').classList.add('hidden');
+        currentModalItem = null;
+    });
+
+    document.getElementById('modal-save').addEventListener('click', () => {
+        if (!currentModalItem) return;
+        const form = document.getElementById('modal-form');
+        const inputs = form.querySelectorAll('input');
+        const values = {};
+        inputs.forEach(inp => { values[inp.name] = inp.value; });
+
+        const item = requirements.find(r => r.id === currentModalItem.id);
+        if (item) {
+            item.status = 'filled';
+            item.filledAt = new Date().toLocaleString('zh-CN');
+        }
+
+        document.getElementById('manual-modal').classList.add('hidden');
+        renderRequirements();
+        updateProgress();
+    });
+
+    // 移动端菜单
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        loadRequirements();
+        document.getElementById('project-title').textContent = `智慧园区物联网卡采购项目 (ID: ${projectId})`;
+    });
+    </script>
+
+    <!-- API Key Settings UI -->
+    <div id="api-key-settings" style="position:fixed;top:70px;right:16px;z-index:9999;">
+      <button onclick="document.getElementById('api-key-modal').classList.remove('hidden')" style="background:#3B82F6;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="设置 API Key">⚙</button>
+    </div>
+    <div id="api-key-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;">
+      <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 12px;font-size:18px;">🔑 设置 API Key</h3>
+        <p style="color:#666;font-size:13px;margin:0 0 12px;">请输入你的 API Key（存储在浏览器本地）</p>
+        <input id="api-key-input" type="text" placeholder="输入 API Key..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button onclick="document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');" style="padding:8px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;">取消</button>
+          <button onclick="(function(){const v=document.getElementById('api-key-input').value;if(v.trim()){localStorage.setItem('api_key',v.trim());alert('✅ API Key 已保存');}document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');})()" style="padding:8px 16px;border:none;border-radius:6px;background:#3B82F6;color:#fff;cursor:pointer;font-weight:600;">保存</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>

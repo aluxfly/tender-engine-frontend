@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>补充资料 - 投标引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+    window.APP_CONFIG = {
+        API_BASE: 'https://tender-engine-backend-production.up.railway.app',
+        getApiKey: function() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key) return key;
+            const stored = localStorage.getItem('api_key');
+            if (stored) return stored;
+            return 'dev-key-2026';
+        }
+    }
+    </script>
+        <script src="js/shared.js"></script>
+</head>
+<body class="bg-gray-50">
+        <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-primary">🎯 投标引擎</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-primary font-medium">首页</a>
+                    <a href="projects.html" class="text-gray-700 hover:text-primary font-medium">项目列表</a>
+                    <a href="bid-manage.html" class="text-gray-700 hover:text-primary font-medium">标书管理</a>
+                    <a href="bid-dashboard.html" class="text-gray-700 hover:text-primary font-medium">工作台</a>
+                    <a href="bid-download.html" class="text-gray-700 hover:text-primary font-medium">标书下载</a>
+                    <a href="bid.html" class="text-gray-700 hover:text-primary font-medium">标书生成</a>
+                    <button class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition">立即试用</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-primary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="index.html" class="block py-2 text-gray-700 hover:text-primary">首页</a>
+                <a href="projects.html" class="block py-2 text-gray-700 hover:text-primary">项目列表</a>
+                <a href="bid-manage.html" class="block py-2 text-gray-700 hover:text-primary">标书管理</a>
+                <a href="bid-dashboard.html" class="block py-2 text-gray-700 hover:text-primary">工作台</a>
+                <a href="bid-download.html" class="block py-2 text-gray-700 hover:text-primary">标书下载</a>
+                <a href="bid.html" class="block py-2 text-gray-700 hover:text-primary">标书生成</a>
+            </div>
+        </div>
+    </nav>
+    <!-- 面包屑导航 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <nav class="text-sm text-gray-500" aria-label="面包屑导航">
+            <ol class="flex items-center space-x-2 flex-wrap">
+                <li><a href="index.html" class="hover:text-primary transition">🏠 首页</a></li><li class="flex items-center"><span class="mx-1">/</span><a href="bid-manage.html" class="hover:text-primary transition">标书管理</a></li><li class="flex items-center"><span class="mx-1">/</span><span class="text-primary font-medium">补充资料</span></li></ol></nav></div></nav>
+
+    <!-- 页面标题 -->
+    <section class="bg-gradient-to-r from-orange-500 to-red-600 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-2 text-sm text-orange-200 mb-3">
+                <a href="bid-manage.html" class="hover:text-white">标书管理</a>
+                <span>/</span>
+                <a href="bid-requirements.html" class="hover:text-white">资料需求清单</a>
+                <span>/</span>
+                <span>补充资料</span>
+            </div>
+            <h1 class="text-3xl font-bold">✏️ 补充资料上传</h1>
+            <p class="mt-2 text-orange-100" id="project-title">加载中...</p>
+        </div>
+    </section>
+
+    <!-- 筛选标签 -->
+    <section class="py-4">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap gap-2">
+                <button class="filter-btn active px-4 py-2 rounded-full text-sm font-medium bg-primary text-white" data-filter="all">全部</button>
+                <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-300 hover:border-primary" data-filter="missing">❌ 需补充</button>
+                <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-300 hover:border-primary" data-filter="pending">⚠️ 待确认</button>
+                <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-300 hover:border-primary" data-filter="done">✅ 已填充</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 资料列表 -->
+    <section class="py-4 pb-24">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8" id="fill-list">
+            <div class="text-center py-16 text-gray-400">
+                <div class="text-6xl mb-4">⏳</div>
+                <p>正在加载资料清单...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部操作栏 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg px-4 py-3 z-50">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="text-sm text-gray-500">
+                已完成 <span class="font-bold text-green-600" id="footer-done">0</span> / <span class="font-bold" id="footer-total">0</span> 项
+            </div>
+            <div class="flex space-x-3">
+                <a href="bid-requirements.html" id="back-link" class="px-5 py-2.5 border-2 border-gray-300 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition">
+                    返回清单
+                </a>
+                <button id="save-all-btn" class="px-5 py-2.5 bg-primary hover:bg-secondary text-white rounded-lg font-medium transition">
+                    保存全部
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-2">🎯 投标引擎</h4>
+                    <p class="text-gray-400 text-sm">智能中标预测平台，专注物联网卡 + 布控球招标</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="projects.html" class="hover:text-white transition">项目列表</a></li>
+                        <li><a href="bid-manage.html" class="hover:text-white transition">标书管理</a></li>
+                        <li><a href="bid-dashboard.html" class="hover:text-white transition">工作台</a></li>
+                        <li><a href="bid-download.html" class="hover:text-white transition">标书下载</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">技术支持</h4>
+                    <p class="text-gray-400 text-sm">基于 AI 驱动的智能投标决策系统</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                &copy; 2026 投标引擎 All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    const API_URL = window.APP_CONFIG.API_BASE + '/api';
+const params = new URLSearchParams(window.location.search);
+    const projectId = params.get('project_id') || params.get('id') || 'demo-1';
+    const highlightItemId = params.get('item');
+
+    const statusMap = {
+        done:    { label: '已填充', icon: '✅', class: 'bg-green-100 text-green-700' },
+        pending: { label: '待确认', icon: '⚠️', class: 'bg-yellow-100 text-yellow-700' },
+        missing: { label: '需补充', icon: '❌', class: 'bg-red-100 text-red-700' },
+    };
+
+    let allItems = [];
+
+    // 加载资料清单
+    async function loadItems() {
+        try {
+            const res = await fetch(`${API_URL}/bid/requirements/${projectId}`, {
+                headers: { 'X-API-Key': window.APP_CONFIG.getApiKey() }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            allItems = flattenItems(data);
+            document.getElementById('project-title').textContent = data.project_name || data.projectName || '补充资料';
+            renderItems(allItems);
+        } catch (e) {
+            console.warn('API 请求失败，使用演示数据:', e);
+            const demo = getDemoItems();
+            allItems = demo;
+            document.getElementById('project-title').textContent = '示例：智慧园区物联网卡采购项目';
+            renderItems(allItems);
+        }
+    }
+
+    function flattenItems(data) {
+        const items = [];
+        for (const [catKey, catItems] of Object.entries(data.categories || {})) {
+            for (const item of catItems) {
+                item._category = catKey;
+                items.push(item);
+            }
+        }
+        return items;
+    }
+
+    function getDemoItems() {
+        return [
+            { id: 'c3', name: '法定代表人授权委托书', status: 'pending', priority: '废标项', description: '授权代表签署的授权委托书，需签字盖章', _category: 'company' },
+            { id: 'f1', name: '近三年审计报告', status: 'missing', priority: '废标项', description: '经审计的2023-2025年度财务报告，需会计师事务所盖章', _category: 'finance' },
+            { id: 'f2', name: '银行资信证明', status: 'pending', priority: '高分项', description: '银行出具的资信等级证明', _category: 'finance' },
+            { id: 'q3', name: '安全生产许可证', status: 'pending', priority: '废标项', description: '有效期内安全生产许可证', _category: 'qualification' },
+            { id: 'p1', name: '近3年类似项目业绩', status: 'missing', priority: '高分项', description: '至少3个同类项目合同复印件', _category: 'performance' },
+            { id: 'p2', name: '用户评价/验收证明', status: 'pending', priority: '低分项', description: '过往项目验收报告或用户评价', _category: 'performance' },
+            { id: 't2', name: '技术负责人简历', status: 'pending', priority: '高分项', description: '技术负责人相关资质及项目经历', _category: 'team' },
+            { id: 't3', name: '团队成员名单及证书', status: 'missing', priority: '高分项', description: '项目团队成员清单及相关证书', _category: 'team' },
+            { id: 'te1', name: '技术方案', status: 'missing', priority: '高分项', description: '针对本项目的技术方案，包含技术路线、实施方案等', _category: 'technical' },
+            { id: 'te2', name: '施工组织设计', status: 'missing', priority: '高分项', description: '施工组织设计方案', _category: 'technical' },
+            { id: 'te3', name: '售后服务方案', status: 'pending', priority: '低分项', description: '售后服务承诺及方案', _category: 'technical' },
+            { id: 'qu1', name: '投标报价单', status: 'missing', priority: '废标项', description: '按招标文件格式填写报价', _category: 'quotation' },
+            { id: 'qu2', name: '分项报价明细', status: 'missing', priority: '高分项', description: '详细的分项报价清单', _category: 'quotation' },
+        ];
+    }
+
+    function renderItems(items) {
+        const filter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+        const filtered = filter === 'all' ? items : items.filter(i => i.status === filter);
+
+        const list = document.getElementById('fill-list');
+        if (filtered.length === 0) {
+            list.innerHTML = `<div class="text-center py-16 text-gray-400"><div class="text-6xl mb-4">🎉</div><p>没有需要补充的资料！</p></div>`;
+            return;
+        }
+
+        let html = '';
+        let doneCount = items.filter(i => i.status === 'done').length;
+        document.getElementById('footer-done').textContent = doneCount;
+        document.getElementById('footer-total').textContent = items.length;
+
+        for (const item of filtered) {
+            const st = statusMap[item.status] || statusMap.pending;
+            const isHighlighted = highlightItemId === item.id;
+            html += `
+            <div class="bg-white rounded-xl shadow-lg mb-4 overflow-hidden ${isHighlighted ? 'ring-2 ring-orange-400' : ''}">
+                <div class="p-5">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <div class="flex items-center flex-wrap gap-2">
+                                <h3 class="text-lg font-bold text-gray-800">${item.name}</h3>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium ${st.class}">${st.icon} ${st.label}</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">${item.description || ''}</p>
+                        </div>
+                    </div>
+
+                    <!-- 上传区域 -->
+                    <div class="mt-4">
+                        <div class="upload-drop-zone border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary hover:bg-blue-50/30 transition cursor-pointer" data-item-id="${item.id}">
+                            <p class="text-sm text-gray-500">📎 拖拽文件到此处或点击上传</p>
+                            <p class="text-xs text-gray-400 mt-1">支持 JPG、PNG、PDF、DOC、DOCX</p>
+                            <input type="file" class="hidden file-input" accept="image/*,.pdf,.doc,.docx" multiple>
+                        </div>
+                        <div class="uploaded-files mt-2 space-y-1"></div>
+                    </div>
+
+                    <!-- 手动录入表单 -->
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <details class="text-sm">
+                            <summary class="text-primary cursor-pointer font-medium">✍️ 手动录入信息</summary>
+                            <div class="mt-3 space-y-3">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">备注说明</label>
+                                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary" rows="2" placeholder="填写相关说明..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">有效期（如适用）</label>
+                                    <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                                </div>
+                                <button class="text-primary text-xs font-medium hover:underline" onclick="markAsDone('${item.id}')">✓ 标记为已提供</button>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        list.innerHTML = html;
+
+        // 绑定上传事件
+        list.querySelectorAll('.upload-drop-zone').forEach(zone => {
+            const input = zone.querySelector('.file-input');
+            zone.addEventListener('click', () => input.click());
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('border-primary', 'bg-blue-50/50'); });
+            zone.addEventListener('dragleave', () => { zone.classList.remove('border-primary', 'bg-blue-50/50'); });
+            zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('border-primary', 'bg-blue-50/50'); handleUpload(zone, e.dataTransfer.files); });
+            input.addEventListener('change', e => handleUpload(zone, e.target.files));
+        });
+
+        // 滚动到高亮项
+        if (highlightItemId) {
+            setTimeout(() => {
+                const el = document.querySelector(`[data-item-id="${highlightItemId}"]`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+    }
+
+    function handleUpload(zone, files) {
+        const filesDiv = zone.parentElement.querySelector('.uploaded-files');
+        const itemId = zone.dataset.itemId;
+
+        Array.from(files).forEach(file => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-2 bg-green-50 rounded-lg text-sm';
+            div.innerHTML = `
+                <div class="flex items-center">
+                    <span class="text-green-500 mr-2">✓</span>
+                    <span class="text-gray-700">${file.name}</span>
+                    <span class="text-gray-400 text-xs ml-2">(${(file.size / 1024).toFixed(0)}KB)</span>
+                </div>
+                <button class="text-red-400 hover:text-red-600 text-xs" onclick="this.parentElement.remove()">删除</button>
+            `;
+            filesDiv.appendChild(div);
+        });
+    }
+
+    function markAsDone(itemId) {
+        const item = allItems.find(i => i.id === itemId);
+        if (item) item.status = 'done';
+        renderItems(allItems);
+    }
+
+    // 筛选按钮
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active', 'bg-primary', 'text-white'); b.classList.add('bg-white', 'text-gray-600', 'border', 'border-gray-300'); });
+            btn.classList.add('active', 'bg-primary', 'text-white');
+            btn.classList.remove('bg-white', 'text-gray-600', 'border', 'border-gray-300');
+            renderItems(allItems);
+        });
+    });
+
+    // 保存全部（演示）
+    document.getElementById('save-all-btn').addEventListener('click', () => {
+        alert('演示模式：资料已保存。实际项目中将调用 API 保存上传的文件和录入信息。');
+    });
+
+    // 返回清单链接
+    document.getElementById('back-link').href = `bid-requirements.html?project_id=${projectId}`;
+
+    // 移动端菜单
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+    // 初始加载
+    loadItems();
+    </script>
+
+    <!-- API Key Settings UI -->
+    <div id="api-key-settings" style="position:fixed;top:70px;right:16px;z-index:9999;">
+      <button onclick="document.getElementById('api-key-modal').classList.remove('hidden')" style="background:#3B82F6;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="设置 API Key">⚙</button>
+    </div>
+    <div id="api-key-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;">
+      <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 12px;font-size:18px;">🔑 设置 API Key</h3>
+        <p style="color:#666;font-size:13px;margin:0 0 12px;">请输入你的 API Key（存储在浏览器本地）</p>
+        <input id="api-key-input" type="text" placeholder="输入 API Key..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button onclick="document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');" style="padding:8px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;">取消</button>
+          <button onclick="(function(){const v=document.getElementById('api-key-input').value;if(v.trim()){localStorage.setItem('api_key',v.trim());alert('✅ API Key 已保存');}document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');})()" style="padding:8px 16px;border:none;border-radius:6px;background:#3B82F6;color:#fff;cursor:pointer;font-weight:600;">保存</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>

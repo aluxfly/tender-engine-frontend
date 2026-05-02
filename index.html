@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投标引擎 - 智能中标预测平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
+        }
+    </script>
+        <script src="js/shared.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-primary">🎯 投标引擎</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-primary font-medium">首页</a>
+                    <a href="projects.html" class="text-gray-700 hover:text-primary font-medium">项目列表</a>
+                    <a href="bid-manage.html" class="text-gray-700 hover:text-primary font-medium">标书管理</a>
+                    <a href="bid-dashboard.html" class="text-gray-700 hover:text-primary font-medium">工作台</a>
+                    <a href="bid-download.html" class="text-gray-700 hover:text-primary font-medium">标书下载</a>
+                    <a href="bid.html" class="text-gray-700 hover:text-primary font-medium">标书生成</a>
+                    <button class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition">立即试用</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-primary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="index.html" class="block py-2 text-primary font-medium">首页</a>
+                <a href="projects.html" class="block py-2 text-gray-700 hover:text-primary">项目列表</a>
+                <a href="bid-manage.html" class="block py-2 text-gray-700 hover:text-primary">标书管理</a>
+                <a href="bid-dashboard.html" class="block py-2 text-gray-700 hover:text-primary">工作台</a>
+                <a href="bid-download.html" class="block py-2 text-gray-700 hover:text-primary">标书下载</a>
+                <a href="bid.html" class="block py-2 text-gray-700 hover:text-primary">标书生成</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 -->
+    <section class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-5xl font-bold mb-6">投标引擎</h1>
+            <p class="text-xl mb-8 max-w-3xl mx-auto">专注物联网卡 + 布控球招标信息，AI 驱动智能投标决策</p>
+            <div class="flex justify-center space-x-4">
+                <a href="projects.html" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition">查看招标</a>
+                <a href="bid.html" class="border-2 border-white text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-white hover:text-blue-600 transition">生成标书</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心功能 -->
+    <section class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">核心功能</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="text-5xl mb-4">📡</div>
+                    <h3 class="text-xl font-bold mb-3">物联网卡招标</h3>
+                    <p class="text-gray-600">聚合全国物联网卡、SIM 卡、流量卡招标信息，实时更新</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="text-5xl mb-4">📹</div>
+                    <h3 class="text-xl font-bold mb-3">布控球招标</h3>
+                    <p class="text-gray-600">专注移动布控、视频监控、安防监控设备招标信息</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="text-5xl mb-4">🤖</div>
+                    <h3 class="text-xl font-bold mb-3">标书 AI 生成</h3>
+                    <p class="text-gray-600">一键生成专业标书，针对物联网卡/布控球项目优化</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 数据展示 -->
+    <section class="bg-gray-100 py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-4xl font-bold text-primary mb-2">15+</div>
+                    <div class="text-gray-600">今日招标</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-primary mb-2">2</div>
+                    <div class="text-gray-600">垂直领域</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-primary mb-2">100%</div>
+                    <div class="text-gray-600">免费使用</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-primary mb-2">24h</div>
+                    <div class="text-gray-600">每日更新</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA 区域 -->
+    <section class="py-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold mb-6">准备好提升中标率了吗？</h2>
+            <p class="text-gray-600 mb-8">立即注册，免费试用 30 天，体验 AI 驱动的投标决策力量</p>
+            <a href="projects.html" class="bg-primary hover:bg-secondary text-white px-10 py-4 rounded-lg font-bold text-lg transition inline-block">免费开始使用</a>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-4">🎯 投标引擎</h4>
+                    <p class="text-gray-400">智能中标预测平台</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">产品</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="projects.html" class="hover:text-white">项目列表</a></li>
+                        <li><a href="bid-manage.html" class="hover:text-white">标书管理</a></li>
+                        <li><a href="bid.html" class="hover:text-white">标书生成</a></li>
+                        <li><a href="#" class="hover:text-white">价格方案</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">支持</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">帮助中心</a></li>
+                        <li><a href="#" class="hover:text-white">联系我们</a></li>
+                        <li><a href="#" class="hover:text-white">API 文档</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">法律</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">隐私政策</a></li>
+                        <li><a href="#" class="hover:text-white">服务条款</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2026 投标引擎。All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    window.APP_CONFIG = {
+        API_BASE: 'https://tender-engine-backend-production.up.railway.app',
+        getApiKey: function() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key) return key;
+            const stored = localStorage.getItem('api_key');
+            if (stored) return stored;
+            return 'dev-key-2026';
+        }
+    }
+
+    // 加载最新项目数据
+    async function loadProjects() {
+        try {
+            const API_URL = window.APP_CONFIG.API_BASE + '/api/projects';
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            const projects = Array.isArray(data) ? data : data.projects || [];
+            
+            const container = document.getElementById('projects-container');
+            if (!container) return;
+            
+            if (projects.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 col-span-3">暂无项目数据</div>';
+                return;
+            }
+            
+            container.innerHTML = projects.slice(0, 6).map(p => `
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">${p.category || '电力招标'}</span>
+                        <span class="text-gray-500 text-xs">${p.publish_date || ''}</span>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 truncate">${p.name || p.title || '未知项目'}</h3>
+                    <p class="text-gray-600 text-sm mb-3 truncate">${p.description || p.name || ''}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-primary font-bold">${p.budget ? '¥ ' + (p.budget/10000).toFixed(0) + '万' : '面议'}</span>
+                        <a href="projects.html" class="text-primary text-sm hover:underline">查看详情 →</a>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error('加载项目失败:', e);
+            const container = document.getElementById('projects-container');
+            if (container) container.innerHTML = '<div class="text-center text-gray-500 col-span-3">加载失败</div>';
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadProjects);
+    </script>
+
+    <!-- API Key Settings UI -->
+    <div id="api-key-settings" style="position:fixed;top:70px;right:16px;z-index:9999;">
+      <button onclick="document.getElementById('api-key-modal').classList.remove('hidden')" style="background:#3B82F6;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="设置 API Key">⚙</button>
+    </div>
+    <div id="api-key-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;">
+      <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 12px;font-size:18px;">🔑 设置 API Key</h3>
+        <p style="color:#666;font-size:13px;margin:0 0 12px;">请输入你的 API Key（存储在浏览器本地）</p>
+        <input id="api-key-input" type="text" placeholder="输入 API Key..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button onclick="document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');" style="padding:8px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;">取消</button>
+          <button onclick="(function(){const v=document.getElementById('api-key-input').value;if(v.trim()){localStorage.setItem('api_key',v.trim());alert('✅ API Key 已保存');}document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');})()" style="padding:8px 16px;border:none;border-radius:6px;background:#3B82F6;color:#fff;cursor:pointer;font-weight:600;">保存</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>

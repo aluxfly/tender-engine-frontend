@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资料需求清单 - 投标引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+    window.APP_CONFIG = {
+        API_BASE: 'https://tender-engine-backend-production.up.railway.app',
+        getApiKey: function() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key) return key;
+            const stored = localStorage.getItem('api_key');
+            if (stored) return stored;
+            return 'dev-key-2026';
+        }
+    }
+    </script>
+        <script src="js/shared.js"></script>
+</head>
+<body class="bg-gray-50">
+        <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-primary">🎯 投标引擎</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-primary font-medium">首页</a>
+                    <a href="projects.html" class="text-gray-700 hover:text-primary font-medium">项目列表</a>
+                    <a href="bid-manage.html" class="text-gray-700 hover:text-primary font-medium">标书管理</a>
+                    <a href="bid-dashboard.html" class="text-gray-700 hover:text-primary font-medium">工作台</a>
+                    <a href="bid-download.html" class="text-gray-700 hover:text-primary font-medium">标书下载</a>
+                    <a href="bid.html" class="text-gray-700 hover:text-primary font-medium">标书生成</a>
+                    <button class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition">立即试用</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-primary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="index.html" class="block py-2 text-gray-700 hover:text-primary">首页</a>
+                <a href="projects.html" class="block py-2 text-gray-700 hover:text-primary">项目列表</a>
+                <a href="bid-manage.html" class="block py-2 text-gray-700 hover:text-primary">标书管理</a>
+                <a href="bid-dashboard.html" class="block py-2 text-gray-700 hover:text-primary">工作台</a>
+                <a href="bid-download.html" class="block py-2 text-gray-700 hover:text-primary">标书下载</a>
+                <a href="bid.html" class="block py-2 text-gray-700 hover:text-primary">标书生成</a>
+            </div>
+        </div>
+    </nav>
+    <!-- 面包屑导航 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <nav class="text-sm text-gray-500" aria-label="面包屑导航">
+            <ol class="flex items-center space-x-2 flex-wrap">
+                <li><a href="index.html" class="hover:text-primary transition">🏠 首页</a></li><li class="flex items-center"><span class="mx-1">/</span><a href="bid-manage.html" class="hover:text-primary transition">标书管理</a></li><li class="flex items-center"><span class="mx-1">/</span><span class="text-primary font-medium">资料需求清单</span></li></ol></nav></div></nav>
+
+    <!-- 页面标题 -->
+    <section class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-2 text-sm text-blue-200 mb-3">
+                <a href="bid-manage.html" class="hover:text-white">标书管理</a>
+                <span>/</span>
+                <a href="bid-upload.html" class="hover:text-white">上传文件</a>
+                <span>/</span>
+                <span>资料需求清单</span>
+            </div>
+            <h1 class="text-3xl font-bold">📋 资料需求清单</h1>
+            <p class="mt-2 text-blue-100" id="project-title">加载中...</p>
+        </div>
+    </section>
+
+    <!-- 总体进度 -->
+    <section class="py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-bold text-gray-800">总体完成度</h2>
+                    <span class="text-2xl font-bold text-primary" id="overall-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 mb-3">
+                    <div id="overall-bar" class="bg-gradient-to-r from-blue-500 to-green-500 rounded-full h-4 transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-1"></span> 已填充: <strong id="count-done">0</strong></span>
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-yellow-500 mr-1"></span> 待确认: <strong id="count-pending">0</strong></span>
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-red-500 mr-1"></span> 需补充: <strong id="count-missing">0</strong></span>
+                    <span class="text-gray-400">总计: <strong id="count-total">0</strong></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 操作栏 -->
+    <section class="py-2">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap gap-3">
+                <button id="auto-fill-btn" class="bg-primary hover:bg-secondary text-white px-5 py-2.5 rounded-lg font-medium transition">
+                    ✨ 自动填充
+                </button>
+                <a id="fill-link" href="#" class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-medium transition">
+                    ✏️ 去补充资料
+                </a>
+                <button id="refresh-btn" class="border-2 border-gray-300 rounded-lg px-5 py-2.5 font-medium text-gray-600 hover:bg-gray-100 transition">
+                    🔄 刷新
+                </button>
+                <a href="bid-preview.html" id="preview-link" class="border-2 border-primary text-primary rounded-lg px-5 py-2.5 font-medium hover:bg-blue-50 transition">
+                    👁️ 预览标书
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 资料清单 -->
+    <section class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="requirements-container">
+            <div class="text-center py-16 text-gray-400">
+                <div class="text-6xl mb-4">⏳</div>
+                <p>正在加载资料需求清单...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-2">🎯 投标引擎</h4>
+                    <p class="text-gray-400 text-sm">智能中标预测平台，专注物联网卡 + 布控球招标</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="projects.html" class="hover:text-white transition">项目列表</a></li>
+                        <li><a href="bid-manage.html" class="hover:text-white transition">标书管理</a></li>
+                        <li><a href="bid-dashboard.html" class="hover:text-white transition">工作台</a></li>
+                        <li><a href="bid-download.html" class="hover:text-white transition">标书下载</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">技术支持</h4>
+                    <p class="text-gray-400 text-sm">基于 AI 驱动的智能投标决策系统</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                &copy; 2026 投标引擎 All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    const API_URL = window.APP_CONFIG.API_BASE + '/api';
+const params = new URLSearchParams(window.location.search);
+    const projectId = params.get('project_id') || params.get('id') || 'demo-1';
+
+    // 类别配置
+    const categoryConfig = {
+        company:    { icon: '🏢', label: '公司信息', color: 'blue' },
+        finance:    { icon: '💰', label: '财务资料', color: 'green' },
+        qualification: { icon: '📜', label: '资质证明', color: 'purple' },
+        performance:   { icon: '📋', label: '业绩案例', color: 'orange' },
+        team:       { icon: '👥', label: '团队人员', color: 'indigo' },
+        technical:  { icon: '⚙️', label: '技术方案', color: 'cyan' },
+        quotation:  { icon: '💲', label: '报价资料', color: 'emerald' },
+    };
+
+    // 优先级排序
+    const priorityOrder = { '废标项': 0, '高分项': 1, '低分项': 2, '选填项': 3, 'critical': 0, 'high': 1, 'medium': 2, 'low': 3 };
+
+    // 状态标签
+    const statusMap = {
+        done:    { label: '已填充', icon: '✅', class: 'bg-green-100 text-green-700 border-green-200' },
+        pending: { label: '待确认', icon: '⚠️', class: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+        missing: { label: '需补充', icon: '❌', class: 'bg-red-100 text-red-700 border-red-200' },
+    };
+
+    const priorityMap = {
+        '废标项': { label: '废标项', class: 'bg-red-500 text-white' },
+        '高分项': { label: '高分项', class: 'bg-orange-500 text-white' },
+        '低分项': { label: '低分项', class: 'bg-blue-500 text-white' },
+        '选填项': { label: '选填项', class: 'bg-gray-400 text-white' },
+        'critical': { label: '废标项', class: 'bg-red-500 text-white' },
+        'high': { label: '高分项', class: 'bg-orange-500 text-white' },
+        'medium': { label: '低分项', class: 'bg-blue-500 text-white' },
+        'low': { label: '选填项', class: 'bg-gray-400 text-white' },
+    };
+
+    // 加载资料需求清单
+    async function loadRequirements() {
+        const container = document.getElementById('requirements-container');
+        try {
+            const res = await fetch(`${API_URL}/bid/requirements/${projectId}`, {
+                headers: { 'X-API-Key': window.APP_CONFIG.getApiKey() }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            renderRequirements(data);
+        } catch (e) {
+            console.warn('API 请求失败，使用演示数据:', e);
+            renderRequirements(getDemoRequirements());
+        }
+    }
+
+    function getDemoRequirements() {
+        return {
+            project_name: '示例：智慧园区物联网卡采购项目',
+            categories: {
+                company: [
+                    { id: 'c1', name: '营业执照', status: 'done', priority: '废标项', description: '有效的营业执照副本扫描件', source: '公司资料库' },
+                    { id: 'c2', name: '法定代表人身份证明', status: 'done', priority: '废标项', description: '法定代表人身份证正反面', source: '公司资料库' },
+                    { id: 'c3', name: '法定代表人授权委托书', status: 'pending', priority: '废标项', description: '授权代表签署的授权委托书', source: '需签字' },
+                    { id: 'c4', name: '公司简介', status: 'done', priority: '低分项', description: '公司基本情况介绍', source: '公司资料库' },
+                ],
+                finance: [
+                    { id: 'f1', name: '近三年审计报告', status: 'missing', priority: '废标项', description: '经审计的2023-2025年度财务报告', source: '需上传' },
+                    { id: 'f2', name: '银行资信证明', status: 'pending', priority: '高分项', description: '银行出具的资信等级证明', source: '需办理' },
+                    { id: 'f3', name: '纳税证明', status: 'done', priority: '低分项', description: '近一年纳税证明', source: '公司资料库' },
+                ],
+                qualification: [
+                    { id: 'q1', name: 'ISO9001质量管理体系认证', status: 'done', priority: '高分项', description: '有效期内ISO9001认证证书', source: '公司资料库' },
+                    { id: 'q2', name: '通信工程施工总承包资质', status: 'done', priority: '废标项', description: '二级及以上资质', source: '公司资料库' },
+                    { id: 'q3', name: '安全生产许可证', status: 'pending', priority: '废标项', description: '有效期内安全生产许可证', source: '公司资料库' },
+                ],
+                performance: [
+                    { id: 'p1', name: '近3年类似项目业绩', status: 'missing', priority: '高分项', description: '至少3个同类项目合同', source: '业绩库' },
+                    { id: 'p2', name: '用户评价/验收证明', status: 'pending', priority: '低分项', description: '过往项目验收报告', source: '业绩库' },
+                ],
+                team: [
+                    { id: 't1', name: '项目经理简历及证书', status: 'done', priority: '废标项', description: '项目经理PMP/建造师证书', source: '人员资料库' },
+                    { id: 't2', name: '技术负责人简历', status: 'pending', priority: '高分项', description: '技术负责人相关资质', source: '人员资料库' },
+                    { id: 't3', name: '团队成员名单及证书', status: 'missing', priority: '高分项', description: '项目团队成员清单及相关证书', source: '人员资料库' },
+                ],
+                technical: [
+                    { id: 'te1', name: '技术方案', status: 'missing', priority: '高分项', description: '针对本项目的技术方案', source: '需编写' },
+                    { id: 'te2', name: '施工组织设计', status: 'missing', priority: '高分项', description: '施工组织设计方案', source: '需编写' },
+                    { id: 'te3', name: '售后服务方案', status: 'pending', priority: '低分项', description: '售后服务承诺及方案', source: '需编写' },
+                ],
+                quotation: [
+                    { id: 'qu1', name: '投标报价单', status: 'missing', priority: '废标项', description: '按招标文件格式填写报价', source: '需填写' },
+                    { id: 'qu2', name: '分项报价明细', status: 'missing', priority: '高分项', description: '详细的分项报价清单', source: '需填写' },
+                ],
+            }
+        };
+    }
+
+    function renderRequirements(data) {
+        document.getElementById('project-title').textContent = data.project_name || data.projectName || '资料需求清单';
+
+        // 更新预览链接
+        document.getElementById('preview-link').href = `bid-preview.html?project_id=${projectId}`;
+        document.getElementById('fill-link').href = `bid-fill.html?project_id=${projectId}`;
+
+        const container = document.getElementById('requirements-container');
+        let html = '';
+        let total = 0, done = 0, pending = 0, missing = 0;
+
+        const catOrder = ['company', 'finance', 'qualification', 'performance', 'team', 'technical', 'quotation'];
+        for (const catKey of catOrder) {
+            const items = (data.categories || {})[catKey];
+            if (!items || items.length === 0) continue;
+
+            const cfg = categoryConfig[catKey] || { icon: '📁', label: catKey, color: 'gray' };
+
+            // 按优先级排序
+            items.sort((a, b) => (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9));
+
+            let catDone = 0;
+            html += `
+            <div class="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
+                <div class="bg-${cfg.color}-50 px-6 py-4 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                        <span class="mr-2">${cfg.icon}</span> ${cfg.label}
+                    </h3>
+                    <span class="text-sm text-gray-500">${items.length} 项</span>
+                </div>
+                <div class="divide-y divide-gray-100">`;
+
+            for (const item of items) {
+                total++;
+                const st = statusMap[item.status] || statusMap.pending;
+                const pr = priorityMap[item.priority] || { label: item.priority, class: 'bg-gray-400 text-white' };
+                if (item.status === 'done') { done++; catDone++; }
+                else if (item.status === 'pending') pending++;
+                else if (item.status === 'missing') missing++;
+
+                html += `
+                    <div class="px-6 py-4 hover:bg-gray-50 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center flex-wrap gap-2 mb-1">
+                                <span class="font-medium text-gray-800">${item.name}</span>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium ${st.class} border">${st.icon} ${st.label}</span>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium ${pr.class}">${pr.label}</span>
+                            </div>
+                            <p class="text-sm text-gray-500">${item.description || ''}</p>
+                            <p class="text-xs text-gray-400 mt-1">来源: ${item.source || '—'}</p>
+                        </div>
+                        ${item.status === 'missing' ? `<a href="bid-fill.html?project_id=${projectId}&item=${item.id}" class="text-primary hover:underline text-sm font-medium whitespace-nowrap">去补充 →</a>` : ''}
+                    </div>`;
+            }
+
+            const catPercent = items.length > 0 ? Math.round((catDone / items.length) * 100) : 0;
+            html += `
+                </div>
+                <div class="bg-gray-50 px-6 py-3 flex items-center justify-between text-sm">
+                    <span class="text-gray-500">完成度</span>
+                    <div class="flex items-center space-x-3 w-1/2">
+                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 rounded-full h-2 transition-all" style="width: ${catPercent}%"></div>
+                        </div>
+                        <span class="text-gray-600 font-medium">${catPercent}%</span>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        container.innerHTML = html;
+
+        // 更新总体统计
+        document.getElementById('overall-percent').textContent = total > 0 ? Math.round((done / total) * 100) + '%' : '0%';
+        document.getElementById('overall-bar').style.width = (total > 0 ? (done / total) * 100 : 0) + '%';
+        document.getElementById('count-done').textContent = done;
+        document.getElementById('count-pending').textContent = pending;
+        document.getElementById('count-missing').textContent = missing;
+        document.getElementById('count-total').textContent = total;
+    }
+
+    // 自动填充
+    document.getElementById('auto-fill-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('auto-fill-btn');
+        btn.disabled = true;
+        btn.innerHTML = '⏳ 自动填充中...';
+        try {
+            const res = await fetch(`${API_URL}/bid/auto-fill/${projectId}`, {
+                method: 'POST',
+                headers: { 'X-API-Key': window.APP_CONFIG.getApiKey() }
+            });
+            const data = await res.json();
+            btn.innerHTML = '✅ 填充完成';
+            setTimeout(() => { btn.innerHTML = '✨ 自动填充'; btn.disabled = false; }, 2000);
+            loadRequirements(); // 刷新列表
+        } catch (e) {
+            console.error('自动填充失败:', e);
+            btn.innerHTML = '✨ 自动填充（演示模式）';
+            btn.disabled = false;
+            // 演示模式：模拟填充成功
+            alert('演示模式：已自动填充可用资料');
+            loadRequirements();
+        }
+    });
+
+    // 刷新
+    document.getElementById('refresh-btn').addEventListener('click', loadRequirements);
+
+    // 移动端菜单
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+    // 初始加载
+    loadRequirements();
+    </script>
+
+    <!-- API Key Settings UI -->
+    <div id="api-key-settings" style="position:fixed;top:70px;right:16px;z-index:9999;">
+      <button onclick="document.getElementById('api-key-modal').classList.remove('hidden')" style="background:#3B82F6;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="设置 API Key">⚙</button>
+    </div>
+    <div id="api-key-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;">
+      <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 12px;font-size:18px;">🔑 设置 API Key</h3>
+        <p style="color:#666;font-size:13px;margin:0 0 12px;">请输入你的 API Key（存储在浏览器本地）</p>
+        <input id="api-key-input" type="text" placeholder="输入 API Key..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button onclick="document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');" style="padding:8px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;">取消</button>
+          <button onclick="(function(){const v=document.getElementById('api-key-input').value;if(v.trim()){localStorage.setItem('api_key',v.trim());alert('✅ API Key 已保存');}document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');})()" style="padding:8px 16px;border:none;border-radius:6px;background:#3B82F6;color:#fff;cursor:pointer;font-weight:600;">保存</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>

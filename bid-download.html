@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标书下载 - 投标引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+    window.APP_CONFIG = {
+        API_BASE: 'https://tender-engine-backend-production.up.railway.app',
+        getApiKey: function() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key) return key;
+            const stored = localStorage.getItem('api_key');
+            if (stored) return stored;
+            return 'dev-key-2026';
+        }
+    }
+    </script>
+        <script src="js/shared.js"></script>
+</head>
+<body class="bg-gray-50">
+        <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-primary">🎯 投标引擎</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-primary font-medium">首页</a>
+                    <a href="projects.html" class="text-gray-700 hover:text-primary font-medium">项目列表</a>
+                    <a href="bid-manage.html" class="text-gray-700 hover:text-primary font-medium">标书管理</a>
+                    <a href="bid-dashboard.html" class="text-gray-700 hover:text-primary font-medium">工作台</a>
+                    <a href="bid-download.html" class="text-primary font-medium">标书下载</a>
+                    <a href="bid.html" class="text-gray-700 hover:text-primary font-medium">标书生成</a>
+                    <button class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition">立即试用</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-primary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="index.html" class="block py-2 text-gray-700 hover:text-primary">首页</a>
+                <a href="projects.html" class="block py-2 text-gray-700 hover:text-primary">项目列表</a>
+                <a href="bid-manage.html" class="block py-2 text-gray-700 hover:text-primary">标书管理</a>
+                <a href="bid-dashboard.html" class="block py-2 text-gray-700 hover:text-primary">工作台</a>
+                <a href="bid-download.html" class="block py-2 text-primary font-medium">标书下载</a>
+                <a href="bid.html" class="block py-2 text-gray-700 hover:text-primary">标书生成</a>
+            </div>
+        </div>
+    </nav>
+    <!-- 面包屑导航 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <nav class="text-sm text-gray-500" aria-label="面包屑导航">
+            <ol class="flex items-center space-x-2 flex-wrap">
+                <li><a href="index.html" class="hover:text-primary transition">🏠 首页</a></li><li class="flex items-center"><span class="mx-1">/</span><span class="text-primary font-medium">标书下载</span></li></ol></nav></div></nav>
+
+    <!-- 页面标题 -->
+    <section class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold">📥 标书下载</h1>
+                    <p class="mt-2 text-blue-100">合并标书文件，导出为 DOCX / PDF 格式</p>
+                </div>
+                <a href="bid-dashboard.html" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                    ← 返回工作台
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 项目选择 -->
+    <section class="py-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-bold text-gray-800 mb-4">选择标书项目</h2>
+                <div class="flex gap-4 flex-wrap">
+                    <select id="project-select" class="flex-1 min-w-[200px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-700">
+                        <option value="">-- 请选择一个标书项目 --</option>
+                    </select>
+                    <button id="load-project-btn" class="bg-primary hover:bg-secondary text-white px-6 py-3 rounded-lg font-medium transition">
+                        加载项目
+                    </button>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">选择已完成解析的标书项目，进行合并和导出操作</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 操作面板 -->
+    <section class="pb-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-6" id="action-panel" style="display:none;">
+                <!-- 合并标书 -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">📦</div>
+                        <h3 class="text-lg font-bold text-gray-800">合并标书</h3>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">将所有章节合并为完整标书文件 (.docx)</p>
+                    <button id="merge-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        开始合并
+                    </button>
+                    <!-- 合并进度 -->
+                    <div id="merge-progress" class="hidden mt-4">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span id="merge-status">合并中...</span>
+                            <span id="merge-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="merge-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="merge-result" class="hidden mt-4 p-4 bg-green-50 rounded-lg">
+                        <p class="text-green-700 font-medium">✅ 合并完成</p>
+                        <p id="merge-file-info" class="text-sm text-green-600 mt-1"></p>
+                    </div>
+                </div>
+
+                <!-- 导出 PDF -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">📄</div>
+                        <h3 class="text-lg font-bold text-gray-800">导出 PDF</h3>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">将标书导出为 PDF 格式，便于正式提交</p>
+                    <button id="pdf-btn" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        导出 PDF
+                    </button>
+                    <!-- 导出进度 -->
+                    <div id="pdf-progress" class="hidden mt-4">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span id="pdf-status">导出中...</span>
+                            <span id="pdf-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="pdf-bar" class="bg-red-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="pdf-result" class="hidden mt-4 p-4 bg-green-50 rounded-lg">
+                        <p class="text-green-700 font-medium">✅ PDF 导出完成</p>
+                        <p id="pdf-file-info" class="text-sm text-green-600 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 下载按钮区 -->
+            <div class="mt-6 bg-white rounded-xl shadow-lg p-6" id="download-section" style="display:none;">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">⬇️ 下载标书文件</h3>
+                <div class="flex flex-wrap gap-4">
+                    <a id="download-docx" href="#" class="flex-1 min-w-[200px] bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-medium transition text-center flex items-center justify-center gap-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <div>
+                            <div>下载 DOCX</div>
+                            <div class="text-xs opacity-75">Word 格式</div>
+                        </div>
+                    </a>
+                    <a id="download-pdf" href="#" class="flex-1 min-w-[200px] bg-red-600 hover:bg-red-700 text-white py-4 rounded-lg font-medium transition text-center flex items-center justify-center gap-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        <div>
+                            <div>下载 PDF</div>
+                            <div class="text-xs opacity-75">PDF 格式</div>
+                        </div>
+                    </a>
+                </div>
+                <p class="text-xs text-gray-400 mt-3">⏰ 下载链接有效期 24 小时，过期后需重新生成</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 下载历史 -->
+    <section class="pb-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">📜 下载历史</h3>
+                <div id="download-history">
+                    <p class="text-center text-gray-400 py-8">暂无下载记录</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-2">🎯 投标引擎</h4>
+                    <p class="text-gray-400 text-sm">智能中标预测平台，专注物联网卡 + 布控球招标</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="projects.html" class="hover:text-white transition">项目列表</a></li>
+                        <li><a href="bid-manage.html" class="hover:text-white transition">标书管理</a></li>
+                        <li><a href="bid-dashboard.html" class="hover:text-white transition">工作台</a></li>
+                        <li><a href="bid-download.html" class="hover:text-white transition">标书下载</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">技术支持</h4>
+                    <p class="text-gray-400 text-sm">基于 AI 驱动的智能投标决策系统</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                &copy; 2026 投标引擎 All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    const API_URL = window.APP_CONFIG.API_BASE + '/api';
+let currentProjectId = null;
+    let downloadHistory = JSON.parse(localStorage.getItem('bid_download_history') || '[]');
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        loadProjects();
+        renderDownloadHistory();
+
+        document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        document.getElementById('load-project-btn').addEventListener('click', loadProject);
+        document.getElementById('merge-btn').addEventListener('click', startMerge);
+        document.getElementById('pdf-btn').addEventListener('click', startPdfExport);
+    });
+
+    // 加载项目列表
+    async function loadProjects() {
+        try {
+            const res = await fetch(`${API_URL}/bid/projects`, {
+                headers: { 'Authorization': `Bearer ${window.APP_CONFIG.getApiKey()}` }
+            });
+            const data = await res.json();
+            const projects = Array.isArray(data) ? data : data.projects || data.data || [];
+            const select = document.getElementById('project-select');
+            projects.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id || p.project_id;
+                opt.textContent = p.name || p.project_name || p.title || `项目 ${p.id}`;
+                select.appendChild(opt);
+            });
+        } catch (e) {
+            console.error('加载项目列表失败:', e);
+            // 从 URL 参数获取 project_id
+            const params = new URLSearchParams(window.location.search);
+            const pid = params.get('project_id');
+            if (pid) {
+                currentProjectId = pid;
+                document.getElementById('project-select').value = pid;
+                showActionPanel();
+            }
+        }
+    }
+
+    // 加载项目详情
+    function loadProject() {
+        const select = document.getElementById('project-select');
+        const pid = select.value;
+        if (!pid) {
+            alert('请先选择一个项目');
+            return;
+        }
+        currentProjectId = pid;
+        showActionPanel();
+    }
+
+    function showActionPanel() {
+        document.getElementById('action-panel').style.display = '';
+        // 重置状态
+        ['merge-progress', 'merge-result', 'pdf-progress', 'pdf-result', 'download-section'].forEach(id => {
+            const el = document.getElementById(id);
+            if (id === 'download-section') {
+                el.style.display = 'none';
+            } else {
+                el.classList.add('hidden');
+            }
+        });
+    }
+
+    // 合并标书
+    async function startMerge() {
+        if (!currentProjectId) return;
+        const btn = document.getElementById('merge-btn');
+        const progress = document.getElementById('merge-progress');
+        const bar = document.getElementById('merge-bar');
+        const percent = document.getElementById('merge-percent');
+        const status = document.getElementById('merge-status');
+        const result = document.getElementById('merge-result');
+
+        btn.disabled = true;
+        btn.classList.add('opacity-50');
+        progress.classList.remove('hidden');
+        result.classList.add('hidden');
+        status.textContent = '正在合并标书...';
+        bar.style.width = '0%';
+        percent.textContent = '0%';
+
+        // 模拟进度
+        const progressInterval = setInterval(() => {
+            const w = parseInt(bar.style.width) || 0;
+            if (w < 90) {
+                const newW = Math.min(w + Math.random() * 15, 90);
+                bar.style.width = newW + '%';
+                percent.textContent = Math.round(newW) + '%';
+            }
+        }, 500);
+
+        try {
+            const res = await fetch(`${API_URL}/bid/merge/${currentProjectId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${window.APP_CONFIG.getApiKey()}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            clearInterval(progressInterval);
+            bar.style.width = '100%';
+            percent.textContent = '100%';
+            status.textContent = '合并完成 ✅';
+
+            // 显示结果
+            result.classList.remove('hidden');
+            document.getElementById('merge-file-info').textContent =
+                `文件大小: ${data.file_size ? (data.file_size / 1024 / 1024).toFixed(2) + ' MB' : '未知'} | 章节数: ${data.chapter_count || 'N/A'}`;
+
+            // 显示下载区
+            document.getElementById('download-section').style.display = '';
+            updateDownloadLinks(data);
+
+            // 记录历史
+            addDownloadHistory('merge', data);
+
+        } catch (e) {
+            clearInterval(progressInterval);
+            status.textContent = '❌ 合并失败: ' + e.message;
+            status.classList.add('text-red-600');
+            bar.style.width = '100%';
+            bar.classList.remove('bg-blue-600');
+            bar.classList.add('bg-red-500');
+            percent.textContent = '0%';
+        }
+
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+    }
+
+    // 导出 PDF
+    async function startPdfExport() {
+        if (!currentProjectId) return;
+        const btn = document.getElementById('pdf-btn');
+        const progress = document.getElementById('pdf-progress');
+        const bar = document.getElementById('pdf-bar');
+        const percent = document.getElementById('pdf-percent');
+        const status = document.getElementById('pdf-status');
+        const result = document.getElementById('pdf-result');
+
+        btn.disabled = true;
+        btn.classList.add('opacity-50');
+        progress.classList.remove('hidden');
+        result.classList.add('hidden');
+        status.textContent = '正在导出 PDF...';
+        bar.style.width = '0%';
+        percent.textContent = '0%';
+
+        const progressInterval = setInterval(() => {
+            const w = parseInt(bar.style.width) || 0;
+            if (w < 90) {
+                const newW = Math.min(w + Math.random() * 12, 90);
+                bar.style.width = newW + '%';
+                percent.textContent = Math.round(newW) + '%';
+            }
+        }, 600);
+
+        try {
+            const res = await fetch(`${API_URL}/bid/export-pdf/${currentProjectId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${window.APP_CONFIG.getApiKey()}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            clearInterval(progressInterval);
+            bar.style.width = '100%';
+            percent.textContent = '100%';
+            status.textContent = '导出完成 ✅';
+
+            result.classList.remove('hidden');
+            document.getElementById('pdf-file-info').textContent =
+                `文件大小: ${data.file_size ? (data.file_size / 1024 / 1024).toFixed(2) + ' MB' : '未知'} | 页数: ${data.page_count || 'N/A'}`;
+
+            document.getElementById('download-section').style.display = '';
+            updateDownloadLinks(data);
+            addDownloadHistory('pdf', data);
+
+        } catch (e) {
+            clearInterval(progressInterval);
+            status.textContent = '❌ 导出失败: ' + e.message;
+            status.classList.add('text-red-600');
+            bar.style.width = '100%';
+            bar.classList.remove('bg-red-600');
+            bar.classList.add('bg-red-500');
+            percent.textContent = '0%';
+        }
+
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+    }
+
+    // 更新下载链接
+    function updateDownloadLinks(data) {
+        const docxLink = document.getElementById('download-docx');
+        const pdfLink = document.getElementById('download-pdf');
+
+        // 生成 24h 有效下载链接（带过期参数）
+        const now = Date.now();
+        const expires = now + 24 * 60 * 60 * 1000;
+
+        if (data.docx_url || data.download_url) {
+            docxLink.href = data.docx_url || data.download_url;
+            docxLink.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+            docxLink.href = `${API_URL}/bid/download/${currentProjectId}?format=docx&expires=${expires}`;
+        }
+
+        if (data.pdf_url) {
+            pdfLink.href = data.pdf_url;
+            pdfLink.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+            pdfLink.href = `${API_URL}/bid/download/${currentProjectId}?format=pdf&expires=${expires}`;
+        }
+    }
+
+    // 下载历史
+    function addDownloadHistory(type, data) {
+        const record = {
+            id: Date.now(),
+            project_id: currentProjectId,
+            type: type,
+            time: new Date().toLocaleString('zh-CN'),
+            file_size: data.file_size ? (data.file_size / 1024 / 1024).toFixed(2) + ' MB' : '未知',
+            status: 'success'
+        };
+        downloadHistory.unshift(record);
+        if (downloadHistory.length > 20) downloadHistory = downloadHistory.slice(0, 20);
+        localStorage.setItem('bid_download_history', JSON.stringify(downloadHistory));
+        renderDownloadHistory();
+    }
+
+    function renderDownloadHistory() {
+        const container = document.getElementById('download-history');
+        if (downloadHistory.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-400 py-8">暂无下载记录</p>';
+            return;
+        }
+        container.innerHTML = `
+            <div class="space-y-3">
+                ${downloadHistory.map(h => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">${h.type === 'merge' ? '📦' : '📄'}</span>
+                            <div>
+                                <div class="font-medium text-gray-700">${h.type === 'merge' ? '标书合并' : 'PDF 导出'}</div>
+                                <div class="text-sm text-gray-500">项目 ID: ${h.project_id}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-gray-600">${h.file_size}</div>
+                            <div class="text-xs text-gray-400">${h.time}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            ${downloadHistory.length > 0 ? `<button onclick="clearHistory()" class="mt-4 text-sm text-red-500 hover:text-red-700">清空历史</button>` : ''}
+        `;
+    }
+
+    function clearHistory() {
+        if (confirm('确定要清空下载历史吗？')) {
+            downloadHistory = [];
+            localStorage.removeItem('bid_download_history');
+            renderDownloadHistory();
+        }
+    }
+    </script>
+
+    <!-- API Key Settings UI -->
+    <div id="api-key-settings" style="position:fixed;top:70px;right:16px;z-index:9999;">
+      <button onclick="document.getElementById('api-key-modal').classList.remove('hidden')" style="background:#3B82F6;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="设置 API Key">⚙</button>
+    </div>
+    <div id="api-key-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;">
+      <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 12px;font-size:18px;">🔑 设置 API Key</h3>
+        <p style="color:#666;font-size:13px;margin:0 0 12px;">请输入你的 API Key（存储在浏览器本地）</p>
+        <input id="api-key-input" type="text" placeholder="输入 API Key..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button onclick="document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');" style="padding:8px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;">取消</button>
+          <button onclick="(function(){const v=document.getElementById('api-key-input').value;if(v.trim()){localStorage.setItem('api_key',v.trim());alert('✅ API Key 已保存');}document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');})()" style="padding:8px 16px;border:none;border-radius:6px;background:#3B82F6;color:#fff;cursor:pointer;font-weight:600;">保存</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>

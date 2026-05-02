@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标书预览 - 投标引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/docx-preview@0.1.20/dist/docx-preview.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .docx-wrapper { background: #f0f0f0; padding: 20px; }
+        .docx-wrapper > section.docx { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 0 auto; max-width: 800px; }
+        .tab-active { border-bottom: 3px solid #3B82F6; color: #3B82F6; font-weight: 700; }
+    </style>
+    <script>
+    window.APP_CONFIG = {
+        API_BASE: 'https://tender-engine-backend-production.up.railway.app',
+        getApiKey: function() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key) return key;
+            const stored = localStorage.getItem('api_key');
+            if (stored) return stored;
+            return 'dev-key-2026';
+        }
+    }
+    </script>
+        <script src="js/shared.js"></script>
+</head>
+<body class="bg-gray-50">
+        <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-primary">🎯 投标引擎</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-primary font-medium">首页</a>
+                    <a href="projects.html" class="text-gray-700 hover:text-primary font-medium">项目列表</a>
+                    <a href="bid-manage.html" class="text-gray-700 hover:text-primary font-medium">标书管理</a>
+                    <a href="bid-dashboard.html" class="text-gray-700 hover:text-primary font-medium">工作台</a>
+                    <a href="bid-download.html" class="text-gray-700 hover:text-primary font-medium">标书下载</a>
+                    <a href="bid.html" class="text-gray-700 hover:text-primary font-medium">标书生成</a>
+                    <button class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition">立即试用</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-primary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="index.html" class="block py-2 text-gray-700 hover:text-primary">首页</a>
+                <a href="projects.html" class="block py-2 text-gray-700 hover:text-primary">项目列表</a>
+                <a href="bid-manage.html" class="block py-2 text-gray-700 hover:text-primary">标书管理</a>
+                <a href="bid-dashboard.html" class="block py-2 text-gray-700 hover:text-primary">工作台</a>
+                <a href="bid-download.html" class="block py-2 text-gray-700 hover:text-primary">标书下载</a>
+                <a href="bid.html" class="block py-2 text-gray-700 hover:text-primary">标书生成</a>
+            </div>
+        </div>
+    </nav>
+    <!-- 面包屑导航 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <nav class="text-sm text-gray-500" aria-label="面包屑导航">
+            <ol class="flex items-center space-x-2 flex-wrap">
+                <li><a href="index.html" class="hover:text-primary transition">🏠 首页</a></li><li class="flex items-center"><span class="mx-1">/</span><a href="bid-manage.html" class="hover:text-primary transition">标书管理</a></li><li class="flex items-center"><span class="mx-1">/</span><span class="text-primary font-medium">标书预览</span></li></ol></nav></div></nav>
+
+    <!-- 页面标题 -->
+    <section class="bg-gradient-to-r from-green-600 to-teal-700 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-2 text-sm text-green-200 mb-3">
+                <a href="bid-manage.html" class="hover:text-white">标书管理</a>
+                <span>/</span>
+                <a href="bid-requirements.html" class="hover:text-white">资料需求</a>
+                <span>/</span>
+                <span>标书预览</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">👁️ 标书预览</h1>
+                    <p class="mt-2 text-green-100" id="project-title">加载中...</p>
+                </div>
+                <div class="mt-4 sm:mt-0 flex items-center space-x-3">
+                    <div class="text-right">
+                        <div class="text-sm text-green-200">填充完成度</div>
+                        <div class="text-2xl font-bold" id="fill-percent">0%</div>
+                    </div>
+                    <div class="w-16 h-16 relative">
+                        <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+                            <path id="percent-circle" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="white" stroke-width="3" stroke-dasharray="0, 100"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 标签页 + 操作 -->
+    <section class="py-4 border-b bg-white sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex space-x-6">
+                    <button class="tab-btn tab-active pb-3 text-sm font-medium" data-tab="quotation">💰 报价文件</button>
+                    <button class="tab-btn pb-3 text-sm font-medium text-gray-500 hover:text-primary transition" data-tab="business">📄 商务文件</button>
+                    <button class="tab-btn pb-3 text-sm font-medium text-gray-500 hover:text-primary transition" data-tab="technical">⚙️ 技术文件</button>
+                </div>
+                <div class="flex space-x-3">
+                    <button id="generate-btn" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        🔄 重新生成
+                    </button>
+                    <button id="download-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        📥 下载标书
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 预览内容 -->
+    <section class="py-6 pb-24">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- 报价文件 -->
+            <div class="tab-content" id="tab-quotation">
+                <div id="preview-quotation" class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="text-center py-20 text-gray-400">
+                        <div class="text-6xl mb-4">📊</div>
+                        <p class="text-lg">报价文件预览</p>
+                        <p class="text-sm mt-2">点击「重新生成」或「下载标书」获取最新文件</p>
+                    </div>
+                </div>
+            </div>
+            <!-- 商务文件 -->
+            <div class="tab-content hidden" id="tab-business">
+                <div id="preview-business" class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="text-center py-20 text-gray-400">
+                        <div class="text-6xl mb-4">📄</div>
+                        <p class="text-lg">商务文件预览</p>
+                        <p class="text-sm mt-2">包含公司信息、资质证明、业绩案例等内容</p>
+                    </div>
+                </div>
+            </div>
+            <!-- 技术文件 -->
+            <div class="tab-content hidden" id="tab-technical">
+                <div id="preview-technical" class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="text-center py-20 text-gray-400">
+                        <div class="text-6xl mb-4">⚙️</div>
+                        <p class="text-lg">技术文件预览</p>
+                        <p class="text-sm mt-2">包含技术方案、施工组织设计、售后服务方案等</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部操作栏 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg px-4 py-3 z-50">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                <span>📊 报价文件: <span class="font-medium text-green-600">待生成</span></span>
+                <span>📄 商务文件: <span class="font-medium text-green-600">待生成</span></span>
+                <span>⚙️ 技术文件: <span class="font-medium text-green-600">待生成</span></span>
+            </div>
+            <div class="flex space-x-3">
+                <a href="bid-requirements.html" id="back-link" class="px-5 py-2 border-2 border-gray-300 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition">
+                    返回清单
+                </a>
+                <button id="generate-all-btn" class="px-5 py-2 bg-primary hover:bg-secondary text-white rounded-lg font-medium transition">
+                    🚀 一键生成全部
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-2">🎯 投标引擎</h4>
+                    <p class="text-gray-400 text-sm">智能中标预测平台，专注物联网卡 + 布控球招标</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="projects.html" class="hover:text-white transition">项目列表</a></li>
+                        <li><a href="bid-manage.html" class="hover:text-white transition">标书管理</a></li>
+                        <li><a href="bid-dashboard.html" class="hover:text-white transition">工作台</a></li>
+                        <li><a href="bid-download.html" class="hover:text-white transition">标书下载</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">技术支持</h4>
+                    <p class="text-gray-400 text-sm">基于 AI 驱动的智能投标决策系统</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                &copy; 2026 投标引擎 All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    const API_URL = window.APP_CONFIG.API_BASE + '/api';
+const params = new URLSearchParams(window.location.search);
+    const projectId = params.get('project_id') || params.get('id') || 'demo-1';
+
+    // 标签页切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('tab-active'); b.classList.add('text-gray-500'); });
+            btn.classList.add('tab-active');
+            btn.classList.remove('text-gray-500');
+            const tab = btn.dataset.tab;
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+        });
+    });
+
+    // 加载预览
+    async function loadPreview(type) {
+        const container = document.getElementById('preview-' + type);
+        const typeNames = { quotation: '报价文件', business: '商务文件', technical: '技术文件' };
+
+        container.innerHTML = `<div class="text-center py-20"><div class="animate-spin text-5xl mb-4">⏳</div><p class="text-gray-400">正在加载${typeNames[type]}...</p></div>`;
+
+        try {
+            const res = await fetch(`${API_URL}/bid/preview/${projectId}?type=${type}`, {
+                headers: { 'X-API-Key': window.APP_CONFIG.getApiKey() }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/vnd.openxmlformats')) {
+                // docx 文件，用 docx-preview 渲染
+                const blob = await res.blob();
+                container.innerHTML = '<div id="docx-container" class="docx-wrapper"></div>';
+                await docx.renderAsync(blob, document.getElementById('docx-container'), null, {
+                    className: 'docx',
+                    inWrapper: false,
+                    ignoreWidth: false,
+                    ignoreHeight: false,
+                    debug: false,
+                });
+            } else {
+                const text = await res.text();
+                // 尝试解析为 HTML
+                if (text.includes('<html') || text.includes('<div')) {
+                    container.innerHTML = text;
+                } else {
+                    // 纯文本或 JSON，展示内容
+                    try {
+                        const data = JSON.parse(text);
+                        renderPreviewData(data, container, typeNames[type]);
+                    } catch {
+                        container.innerHTML = `<pre class="p-6 text-sm text-gray-700 whitespace-pre-wrap">${text}</pre>`;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('预览加载失败，使用演示数据:', e);
+            renderDemoPreview(container, type);
+        }
+    }
+
+    function renderPreviewData(data, container, typeName) {
+        // 通用 JSON 数据渲染
+        let html = `<div class="p-6"><h2 class="text-xl font-bold mb-4">${typeName}</h2>`;
+        if (data.sections) {
+            for (const sec of data.sections) {
+                html += `<h3 class="text-lg font-bold mt-4 mb-2">${sec.title}</h3><p class="text-gray-700 text-sm leading-relaxed">${sec.content || ''}</p>`;
+            }
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function renderDemoPreview(container, type) {
+        const demos = {
+            quotation: {
+                title: '投标报价文件',
+                sections: [
+                    { title: '一、投标函', content: '致：北京市朝阳区科技园区管委会\n\n根据贵方智慧园区物联网卡采购项目（项目编号：ZB-2026-0501）的招标文件要求，我方经认真研究，决定参加本项目的投标活动。' },
+                    { title: '二、开标一览表', content: '项目名称：智慧园区物联网卡采购项目\n投标总价：¥ 2,580,000.00（大写：贰佰伍拾捌万元整）\n投标有效期：90日历天\n交货期：合同签订后30日内' },
+                    { title: '三、分项报价明细', content: '1. 物联网卡（10000张）：¥ 1,200,000.00\n2. 管理平台软件：¥ 800,000.00\n3. 安装调试服务：¥ 380,000.00\n4. 三年运维服务：¥ 200,000.00\n合计：¥ 2,580,000.00' },
+                ]
+            },
+            business: {
+                title: '商务文件',
+                sections: [
+                    { title: '一、投标人基本情况', content: '投标人名称：XX科技有限公司\n注册地址：北京市朝阳区XX路XX号\n法定代表人：XXX\n注册资本：5000万元\n成立日期：2015年6月' },
+                    { title: '二、资质证明文件', content: '✓ 营业执照（统一社会信用代码：91110105XXXXXX）\n✓ ISO9001质量管理体系认证\n✓ 通信工程施工总承包二级资质\n✓ 安全生产许可证' },
+                    { title: '三、近年业绩情况', content: '1. 2024年 - 北京市海淀区智慧社区物联网项目（合同金额：350万元）\n2. 2023年 - 上海市浦东新区IoT卡部署项目（合同金额：520万元）\n3. 2023年 - 广州市智慧交通物联网卡项目（合同金额：280万元）' },
+                ]
+            },
+            technical: {
+                title: '技术文件',
+                sections: [
+                    { title: '一、技术方案概述', content: '本项目采用先进的物联网技术，基于NB-IoT/Cat.1双模通信方案，为智慧园区提供稳定可靠的物联网连接服务。方案涵盖终端管理、数据采集、平台对接等核心功能。' },
+                    { title: '二、技术路线', content: '• 通信层：NB-IoT + Cat.1 双模物联网卡\n• 平台层：自研IoT管理平台，支持百万级设备接入\n• 应用层：提供标准API接口，支持第三方系统对接\n• 安全层：端到端加密传输，符合等保2.0要求' },
+                    { title: '三、施工组织设计', content: '第一阶段（1-5天）：现场勘查与方案细化\n第二阶段（6-15天）：设备采购与平台部署\n第三阶段（16-25天）：现场安装与调试\n第四阶段（26-30天）：系统联调与验收' },
+                    { title: '四、售后服务方案', content: '• 7×24小时技术支持热线\n• 2小时内响应，4小时内到达现场\n• 质保期：3年免费维保\n• 定期巡检：每季度一次\n• 备品备件库：本地化备件支持' },
+                ]
+            }
+        };
+
+        const data = demos[type];
+        let html = `
+        <div class="p-6">
+            <div class="text-center mb-8 pb-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800">${data.title}</h2>
+                <p class="text-sm text-gray-400 mt-1">智慧园区物联网卡采购项目 | 投标引擎 AI 生成</p>
+            </div>`;
+        for (const sec of data.sections) {
+            html += `
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                    <span class="w-1 h-6 bg-primary rounded mr-3"></span>${sec.title}
+                </h3>
+                <div class="pl-7 text-gray-700 text-sm leading-relaxed whitespace-pre-line">${sec.content}</div>
+            </div>`;
+        }
+        html += `<div class="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">— 本文档由投标引擎 AI 自动生成 —</div>`;
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // 加载所有预览
+    function loadAllPreviews() {
+        ['quotation', 'business', 'technical'].forEach(t => loadPreview(t));
+    }
+
+    // 重新生成按钮
+    document.getElementById('generate-btn').addEventListener('click', () => {
+        const activeTab = document.querySelector('.tab-btn.tab-active').dataset.tab;
+        loadPreview(activeTab);
+    });
+
+    // 一键生成
+    document.getElementById('generate-all-btn').addEventListener('click', () => {
+        loadAllPreviews();
+    });
+
+    // 下载按钮（Day 4 实现）
+    document.getElementById('download-btn').addEventListener('click', () => {
+        alert('📥 下载功能将在 Day 4 实现。\n\n届时将支持：\n• 下载完整标书（.docx）\n• 分别下载三份文件\n• 打包下载为 ZIP');
+    });
+
+    // 返回清单链接
+    document.getElementById('back-link').href = `bid-requirements.html?project_id=${projectId}`;
+
+    // 移动端菜单
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+    // 初始加载
+    loadAllPreviews();
+
+    // 模拟填充完成度
+    setTimeout(() => {
+        const pct = 68;
+        document.getElementById('fill-percent').textContent = pct + '%';
+        document.getElementById('percent-circle').setAttribute('stroke-dasharray', `${pct}, 100`);
+    }, 500);
+    </script>
+
+    <!-- API Key Settings UI -->
+    <div id="api-key-settings" style="position:fixed;top:70px;right:16px;z-index:9999;">
+      <button onclick="document.getElementById('api-key-modal').classList.remove('hidden')" style="background:#3B82F6;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="设置 API Key">⚙</button>
+    </div>
+    <div id="api-key-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;">
+      <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 12px;font-size:18px;">🔑 设置 API Key</h3>
+        <p style="color:#666;font-size:13px;margin:0 0 12px;">请输入你的 API Key（存储在浏览器本地）</p>
+        <input id="api-key-input" type="text" placeholder="输入 API Key..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button onclick="document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');" style="padding:8px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;">取消</button>
+          <button onclick="(function(){const v=document.getElementById('api-key-input').value;if(v.trim()){localStorage.setItem('api_key',v.trim());alert('✅ API Key 已保存');}document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');})()" style="padding:8px 16px;border:none;border-radius:6px;background:#3B82F6;color:#fff;cursor:pointer;font-weight:600;">保存</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>

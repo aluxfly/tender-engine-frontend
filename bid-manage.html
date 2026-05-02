@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标书管理 - 投标引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+    window.APP_CONFIG = {
+        API_BASE: 'https://tender-engine-backend-production.up.railway.app',
+        getApiKey: function() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key) return key;
+            const stored = localStorage.getItem('api_key');
+            if (stored) return stored;
+            return 'dev-key-2026';
+        }
+    }
+    </script>
+        <script src="js/shared.js"></script>
+</head>
+<body class="bg-gray-50">
+        <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-primary">🎯 投标引擎</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-primary font-medium">首页</a>
+                    <a href="projects.html" class="text-gray-700 hover:text-primary font-medium">项目列表</a>
+                    <a href="bid-manage.html" class="text-primary font-medium">标书管理</a>
+                    <a href="bid-dashboard.html" class="text-gray-700 hover:text-primary font-medium">工作台</a>
+                    <a href="bid-download.html" class="text-gray-700 hover:text-primary font-medium">标书下载</a>
+                    <a href="bid.html" class="text-gray-700 hover:text-primary font-medium">标书生成</a>
+                    <button class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition">立即试用</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-primary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="index.html" class="block py-2 text-gray-700 hover:text-primary">首页</a>
+                <a href="projects.html" class="block py-2 text-gray-700 hover:text-primary">项目列表</a>
+                <a href="bid-manage.html" class="block py-2 text-primary font-medium">标书管理</a>
+                <a href="bid-dashboard.html" class="block py-2 text-gray-700 hover:text-primary">工作台</a>
+                <a href="bid-download.html" class="block py-2 text-gray-700 hover:text-primary">标书下载</a>
+                <a href="bid.html" class="block py-2 text-gray-700 hover:text-primary">标书生成</a>
+            </div>
+        </div>
+    </nav>
+    <!-- 面包屑导航 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <nav class="text-sm text-gray-500" aria-label="面包屑导航">
+            <ol class="flex items-center space-x-2 flex-wrap">
+                <li><a href="index.html" class="hover:text-primary transition">🏠 首页</a></li><li class="flex items-center"><span class="mx-1">/</span><span class="text-primary font-medium">标书管理</span></li></ol></nav></div></nav>
+
+    <!-- 页面标题 -->
+    <section class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-3xl font-bold">标书管理工作台</h1>
+            <p class="mt-2 text-blue-100">创建、跟踪和管理你的所有标书项目</p>
+        </div>
+    </section>
+
+    <!-- 快捷入口 -->
+    <section class="py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">📌 快速开始</h2>
+            <div class="grid md:grid-cols-4 gap-4 mb-6">
+                <a href="bid-create.html" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">➕</div>
+                    <h3 class="font-bold text-gray-800">创建标书</h3>
+                    <p class="text-sm text-gray-500 mt-1">上传招标文件，启动新项目</p>
+                </a>
+                <a href="bid-upload.html" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">📤</div>
+                    <h3 class="font-bold text-gray-800">上传招标文件</h3>
+                    <p class="text-sm text-gray-500 mt-1">拖拽上传，AI 自动解析</p>
+                </a>
+                <a href="bid-company.html" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">🏢</div>
+                    <h3 class="font-bold text-gray-800">公司资料</h3>
+                    <p class="text-sm text-gray-500 mt-1">管理公司资质与银行信息</p>
+                </a>
+                <a href="bid-team.html" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">👥</div>
+                    <h3 class="font-bold text-gray-800">团队人员</h3>
+                    <p class="text-sm text-gray-500 mt-1">管理项目团队成员与证书</p>
+                </a>
+            </div>
+            <div class="grid md:grid-cols-4 gap-4">
+                <a href="bid-cases.html" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">📋</div>
+                    <h3 class="font-bold text-gray-800">业绩案例</h3>
+                    <p class="text-sm text-gray-500 mt-1">管理历史项目与合同证明</p>
+                </a>
+                <a href="bid-requirements.html" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">📋</div>
+                    <h3 class="font-bold text-gray-800">资料需求清单</h3>
+                    <p class="text-sm text-gray-500 mt-1">查看并管理投标所需资料</p>
+                </a>
+                <a href="bid-fill.html" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">✏️</div>
+                    <h3 class="font-bold text-gray-800">补充资料</h3>
+                    <p class="text-sm text-gray-500 mt-1">上传文件 / 手动录入资料</p>
+                </a>
+                <a href="bid-preview.html" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">👁️</div>
+                    <h3 class="font-bold text-gray-800">标书预览</h3>
+                    <p class="text-sm text-gray-500 mt-1">预览生成后的标书文件</p>
+                </a>
+            </div>
+            <!-- Day 3 新入口 -->
+            <h2 class="text-lg font-bold text-gray-800 mb-4 mt-6">🆕 Day 3 - 智能工作台</h2>
+            <div class="grid md:grid-cols-3 gap-4">
+                <a href="bid-supplement.html" class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group border border-orange-200">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">📝</div>
+                    <h3 class="font-bold text-gray-800">补充资料工作台</h3>
+                    <p class="text-sm text-gray-600 mt-1">拖拽上传 / 手动录入 / 自动填充</p>
+                </a>
+                <a href="bid-ai-edit.html" class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group border border-purple-200">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">🤖</div>
+                    <h3 class="font-bold text-gray-800">AI 智能编辑</h3>
+                    <p class="text-sm text-gray-600 mt-1">AI 生成 / 在线编辑 / 草稿保存</p>
+                </a>
+                <a href="bid-realtime-preview.html" class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group border border-emerald-200">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">👁️</div>
+                    <h3 class="font-bold text-gray-800">实时预览</h3>
+                    <p class="text-sm text-gray-600 mt-1">实时刷新 / 完成度图表 / 废标警示</p>
+                </a>
+            </div>
+            <!-- Day 4 新入口 -->
+            <h2 class="text-lg font-bold text-gray-800 mb-4 mt-6">🚀 Day 4 - 下载与工作台</h2>
+            <div class="grid md:grid-cols-3 gap-4">
+                <a href="bid-dashboard.html" class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group border border-blue-200">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">📊</div>
+                    <h3 class="font-bold text-gray-800">工作台总览</h3>
+                    <p class="text-sm text-gray-600 mt-1">项目列表 / 阶段状态 / 进度条 / 按状态筛选</p>
+                </a>
+                <a href="bid-download.html" class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group border border-green-200">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">📥</div>
+                    <h3 class="font-bold text-gray-800">标书下载</h3>
+                    <p class="text-sm text-gray-600 mt-1">合并标书 / 导出 PDF / DOCX 下载 / 历史记录</p>
+                </a>
+                <a href="bid-check-result.html" class="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition text-center group border border-red-200">
+                    <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">⚠️</div>
+                    <h3 class="font-bold text-gray-800">校验报告</h3>
+                    <p class="text-sm text-gray-600 mt-1">废标项检查 / 评分报告 / 改进建议</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 状态统计 -->
+    <section class="py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-5 gap-4" id="status-stats">
+                <div class="bg-white p-4 rounded-xl shadow text-center">
+                    <div class="text-2xl font-bold text-gray-400" id="count-draft">0</div>
+                    <div class="text-sm text-gray-500">草稿</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow text-center">
+                    <div class="text-2xl font-bold text-yellow-500" id="count-parsing">0</div>
+                    <div class="text-sm text-gray-500">解析中</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow text-center">
+                    <div class="text-2xl font-bold text-blue-500" id="count-filling">0</div>
+                    <div class="text-sm text-gray-500">填充中</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow text-center">
+                    <div class="text-2xl font-bold text-green-500" id="count-done">0</div>
+                    <div class="text-sm text-gray-500">已完成</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow text-center">
+                    <div class="text-2xl font-bold text-purple-500" id="count-downloaded">0</div>
+                    <div class="text-sm text-gray-500">已下载</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 项目列表 -->
+    <section class="py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800">标书项目列表</h2>
+                <div class="flex items-center space-x-3">
+                    <select id="filter-status" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">全部状态</option>
+                        <option value="draft">草稿</option>
+                        <option value="parsing">解析中</option>
+                        <option value="filling">填充中</option>
+                        <option value="done">已完成</option>
+                        <option value="downloaded">已下载</option>
+                    </select>
+                    <a href="bid-create.html" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium transition">+ 新建标书</a>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">项目名称</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bid-list" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                                    <div class="text-5xl mb-3">📄</div>
+                                    <p>暂无标书项目，点击上方「新建标书」开始</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-2">🎯 投标引擎</h4>
+                    <p class="text-gray-400 text-sm">智能中标预测平台，专注物联网卡 + 布控球招标</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="projects.html" class="hover:text-white transition">项目列表</a></li>
+                        <li><a href="bid-manage.html" class="hover:text-white transition">标书管理</a></li>
+                        <li><a href="bid-dashboard.html" class="hover:text-white transition">工作台</a></li>
+                        <li><a href="bid-download.html" class="hover:text-white transition">标书下载</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">技术支持</h4>
+                    <p class="text-gray-400 text-sm">基于 AI 驱动的智能投标决策系统</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                &copy; 2026 投标引擎 All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    const API_URL = window.APP_CONFIG.API_BASE + '/api';
+
+    // 状态标签
+    const statusMap = {
+        draft: { label: '草稿', class: 'bg-gray-100 text-gray-600' },
+        parsing: { label: '解析中', class: 'bg-yellow-100 text-yellow-700' },
+        filling: { label: '填充中', class: 'bg-blue-100 text-blue-700' },
+        done: { label: '已完成', class: 'bg-green-100 text-green-700' },
+        downloaded: { label: '已下载', class: 'bg-purple-100 text-purple-700' },
+    };
+
+    // 加载标书列表
+    async function loadBids() {
+        try {
+            const filter = document.getElementById('filter-status').value;
+            const url = filter ? `${API_URL}/bids?status=${filter}` : `${API_URL}/bids`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const bids = Array.isArray(data) ? data : data.bids || data.data || [];
+            renderBids(bids);
+            updateStats(bids);
+        } catch (e) {
+            console.error('加载标书列表失败:', e);
+            // 使用本地演示数据
+            renderBids(getDemoBids());
+            updateStats(getDemoBids());
+        }
+    }
+
+    function getDemoBids() {
+        return [
+            { id: 1, name: '朝阳区智慧园区物联网卡采购项目', type: '物联网卡', status: 'done', created_at: '2026-04-28' },
+            { id: 2, name: '深圳市布控球安防监控系统招标', type: '布控球', status: 'filling', created_at: '2026-04-30' },
+            { id: 3, name: '国家电网电力设备集中采购', type: '电力设备', status: 'parsing', created_at: '2026-05-01' },
+            { id: 4, name: '杭州市交通监控改造项目', type: '通用', status: 'draft', created_at: '2026-05-02' },
+        ];
+    }
+
+    function renderBids(bids) {
+        const tbody = document.getElementById('bid-list');
+        if (bids.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400"><div class="text-5xl mb-3">📄</div><p>暂无标书项目</p></td></tr>`;
+            return;
+        }
+        tbody.innerHTML = bids.map(bid => {
+            const s = statusMap[bid.status] || statusMap.draft;
+            return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4">
+                    <div class="font-medium text-gray-900">${bid.name || bid.title || '未命名项目'}</div>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600">${bid.type || bid.category || '通用'}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium ${s.class}">${s.label}</span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500">${bid.created_at || bid.createdTime || ''}</td>
+                <td class="px-6 py-4 text-sm">
+                    <div class="flex flex-wrap gap-x-3 gap-y-1">
+                        <a href="bid-create.html?id=${bid.id}" class="text-primary hover:underline">查看</a>
+                        <a href="bid-upload.html?project_id=${bid.id}" class="text-blue-600 hover:underline">上传</a>
+                        <a href="bid-requirements.html?project_id=${bid.id}" class="text-orange-600 hover:underline">资料</a>
+                        <a href="bid-supplement.html?project_id=${bid.id}" class="text-orange-500 hover:underline">补充</a>
+                        <a href="bid-ai-edit.html?project_id=${bid.id}" class="text-purple-600 hover:underline">AI编辑</a>
+                        <a href="bid-realtime-preview.html?project_id=${bid.id}" class="text-emerald-600 hover:underline">预览</a>
+                        <a href="bid-dashboard.html" class="text-blue-500 hover:underline">工作台</a>
+                        <a href="bid-download.html?project_id=${bid.id}" class="text-green-600 hover:underline">下载</a>
+                        <a href="bid-check-result.html?project_id=${bid.id}" class="text-red-600 hover:underline">校验</a>
+                        <button onclick="deleteBid(${bid.id})" class="text-red-500 hover:underline">删除</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function updateStats(bids) {
+        const counts = { draft: 0, parsing: 0, filling: 0, done: 0, downloaded: 0 };
+        bids.forEach(b => { if (counts[b.status] !== undefined) counts[b.status]++; });
+        document.getElementById('count-draft').textContent = counts.draft;
+        document.getElementById('count-parsing').textContent = counts.parsing;
+        document.getElementById('count-filling').textContent = counts.filling;
+        document.getElementById('count-done').textContent = counts.done;
+        document.getElementById('count-downloaded').textContent = counts.downloaded;
+    }
+
+    async function deleteBid(id) {
+        if (!confirm('确定要删除这个标书项目吗？')) return;
+        try {
+            await fetch(`${API_URL}/bids/${id}`, { method: 'DELETE' });
+            loadBids();
+        } catch (e) {
+            console.error('删除失败:', e);
+            alert('删除失败，请重试');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadBids);
+    document.getElementById('filter-status').addEventListener('change', loadBids);
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+    </script>
+
+    <!-- API Key Settings UI -->
+    <div id="api-key-settings" style="position:fixed;top:70px;right:16px;z-index:9999;">
+      <button onclick="document.getElementById('api-key-modal').classList.remove('hidden')" style="background:#3B82F6;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="设置 API Key">⚙</button>
+    </div>
+    <div id="api-key-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;">
+      <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 12px;font-size:18px;">🔑 设置 API Key</h3>
+        <p style="color:#666;font-size:13px;margin:0 0 12px;">请输入你的 API Key（存储在浏览器本地）</p>
+        <input id="api-key-input" type="text" placeholder="输入 API Key..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button onclick="document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');" style="padding:8px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;">取消</button>
+          <button onclick="(function(){const v=document.getElementById('api-key-input').value;if(v.trim()){localStorage.setItem('api_key',v.trim());alert('✅ API Key 已保存');}document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');})()" style="padding:8px 16px;border:none;border-radius:6px;background:#3B82F6;color:#fff;cursor:pointer;font-weight:600;">保存</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>

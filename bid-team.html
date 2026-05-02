@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>团队人员 - 投标引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+    window.APP_CONFIG = {
+        API_BASE: 'https://tender-engine-backend-production.up.railway.app',
+        getApiKey: function() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key) return key;
+            const stored = localStorage.getItem('api_key');
+            if (stored) return stored;
+            return 'dev-key-2026';
+        }
+    }
+    </script>
+        <script src="js/shared.js"></script>
+</head>
+<body class="bg-gray-50">
+        <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-primary">🎯 投标引擎</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-primary font-medium">首页</a>
+                    <a href="projects.html" class="text-gray-700 hover:text-primary font-medium">项目列表</a>
+                    <a href="bid-manage.html" class="text-gray-700 hover:text-primary font-medium">标书管理</a>
+                    <a href="bid-dashboard.html" class="text-gray-700 hover:text-primary font-medium">工作台</a>
+                    <a href="bid-download.html" class="text-gray-700 hover:text-primary font-medium">标书下载</a>
+                    <a href="bid.html" class="text-gray-700 hover:text-primary font-medium">标书生成</a>
+                    <button class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition">立即试用</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-primary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="index.html" class="block py-2 text-gray-700 hover:text-primary">首页</a>
+                <a href="projects.html" class="block py-2 text-gray-700 hover:text-primary">项目列表</a>
+                <a href="bid-manage.html" class="block py-2 text-gray-700 hover:text-primary">标书管理</a>
+                <a href="bid-dashboard.html" class="block py-2 text-gray-700 hover:text-primary">工作台</a>
+                <a href="bid-download.html" class="block py-2 text-gray-700 hover:text-primary">标书下载</a>
+                <a href="bid.html" class="block py-2 text-gray-700 hover:text-primary">标书生成</a>
+            </div>
+        </div>
+    </nav>
+    <!-- 面包屑导航 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <nav class="text-sm text-gray-500" aria-label="面包屑导航">
+            <ol class="flex items-center space-x-2 flex-wrap">
+                <li><a href="index.html" class="hover:text-primary transition">🏠 首页</a></li><li class="flex items-center"><span class="mx-1">/</span><a href="bid-manage.html" class="hover:text-primary transition">标书管理</a></li><li class="flex items-center"><span class="mx-1">/</span><span class="text-primary font-medium">团队人员</span></li></ol></nav></div></nav>
+
+    <!-- 页面标题 -->
+    <section class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-2 text-sm text-blue-200 mb-3">
+                <a href="bid-manage.html" class="hover:text-white">标书管理</a>
+                <span>/</span>
+                <span>团队人员</span>
+            </div>
+            <h1 class="text-3xl font-bold">团队人员管理</h1>
+            <p class="mt-2 text-blue-100">管理项目团队成员及其资质证书</p>
+        </div>
+    </section>
+
+    <!-- 操作栏 -->
+    <section class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <select id="filter-role" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">全部角色</option>
+                        <option value="project-manager">项目经理</option>
+                        <option value="tech-lead">技术负责人</option>
+                        <option value="safety-lead">安全负责人</option>
+                        <option value="quality-lead">质量负责人</option>
+                        <option value="member">普通成员</option>
+                    </select>
+                </div>
+                <button onclick="openModal()" class="bg-primary hover:bg-secondary text-white px-5 py-2 rounded-lg font-medium transition">+ 添加人员</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 人员列表 -->
+    <section class="pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="team-grid">
+                <!-- 动态渲染 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 添加/编辑模态框 -->
+    <div id="member-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 class="text-lg font-bold" id="modal-title">添加人员</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form id="member-form" class="p-6 space-y-4">
+                <input type="hidden" id="member-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+                    <input type="text" id="member-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">角色 <span class="text-red-500">*</span></label>
+                    <select id="member-role" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">请选择角色</option>
+                        <option value="project-manager">项目经理</option>
+                        <option value="tech-lead">技术负责人</option>
+                        <option value="safety-lead">安全负责人</option>
+                        <option value="quality-lead">质量负责人</option>
+                        <option value="member">普通成员</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+                        <input type="tel" id="member-phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                        <input type="email" id="member-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">职称/职务</label>
+                    <input type="text" id="member-title" placeholder="例：高级工程师" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">资格证书</label>
+                    <input type="text" id="member-cert" placeholder="例：一级建造师（编号：XXXXXXXX）" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">从业年限</label>
+                    <input type="number" id="member-years" placeholder="10" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">证书附件</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition cursor-pointer" onclick="document.getElementById('cert-upload').click()">
+                        <p class="text-sm text-gray-500">点击上传证书扫描件</p>
+                        <input type="file" id="cert-upload" accept=".pdf,.jpg,.png" class="hidden">
+                    </div>
+                    <div id="cert-files" class="mt-2 space-y-1"></div>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button type="submit" class="flex-1 bg-primary hover:bg-secondary text-white py-3 rounded-lg font-medium transition">保存</button>
+                    <button type="button" onclick="closeModal()" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-2">🎯 投标引擎</h4>
+                    <p class="text-gray-400 text-sm">智能中标预测平台，专注物联网卡 + 布控球招标</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="projects.html" class="hover:text-white transition">项目列表</a></li>
+                        <li><a href="bid-manage.html" class="hover:text-white transition">标书管理</a></li>
+                        <li><a href="bid-dashboard.html" class="hover:text-white transition">工作台</a></li>
+                        <li><a href="bid-download.html" class="hover:text-white transition">标书下载</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">技术支持</h4>
+                    <p class="text-gray-400 text-sm">基于 AI 驱动的智能投标决策系统</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                &copy; 2026 投标引擎 All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    const API_URL = window.APP_CONFIG.API_BASE + '/api';
+
+    const roleMap = {
+        'project-manager': { label: '项目经理', icon: '👔', color: 'bg-blue-100 text-blue-700' },
+        'tech-lead': { label: '技术负责人', icon: '💻', color: 'bg-purple-100 text-purple-700' },
+        'safety-lead': { label: '安全负责人', icon: '🛡️', color: 'bg-green-100 text-green-700' },
+        'quality-lead': { label: '质量负责人', icon: '✅', color: 'bg-yellow-100 text-yellow-700' },
+        'member': { label: '成员', icon: '👤', color: 'bg-gray-100 text-gray-600' },
+    };
+
+    // 演示数据
+    const demoMembers = [
+        { id: 1, name: '张伟', role: 'project-manager', phone: '138****1234', title: '高级工程师', cert: '一级建造师（编号：A1234567）', years: 15 },
+        { id: 2, name: '李娜', role: 'tech-lead', phone: '139****5678', title: '技术总监', cert: 'PMP 项目管理师', years: 12 },
+        { id: 3, name: '王强', role: 'safety-lead', phone: '136****9012', title: '安全工程师', cert: '注册安全工程师（编号：S9876543）', years: 8 },
+        { id: 4, name: '赵敏', role: 'quality-lead', phone: '137****3456', title: '质量经理', cert: 'ISO9001 内审员', years: 10 },
+        { id: 5, name: '陈浩', role: 'member', phone: '135****7890', title: '网络工程师', cert: 'HCIE 认证', years: 6 },
+    ];
+
+    function renderMembers(members) {
+        const grid = document.getElementById('team-grid');
+        if (!members.length) {
+            grid.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-400"><div class="text-5xl mb-3">👥</div><p>暂无团队成员</p></div>';
+            return;
+        }
+        grid.innerHTML = members.map(m => {
+            const r = roleMap[m.role] || roleMap.member;
+            return `
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white text-xl font-bold mr-3">${m.name[0]}</div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">${m.name}</h3>
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium ${r.color}">${r.icon} ${r.label}</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-1">
+                        <button onclick="editMember(${m.id})" class="text-gray-400 hover:text-primary p-1" title="编辑">✏️</button>
+                        <button onclick="deleteMember(${m.id})" class="text-gray-400 hover:text-red-500 p-1" title="删除">🗑️</button>
+                    </div>
+                </div>
+                <div class="space-y-2 text-sm text-gray-600">
+                    ${m.title ? `<div><span class="text-gray-400">职称：</span>${m.title}</div>` : ''}
+                    ${m.cert ? `<div><span class="text-gray-400">证书：</span>${m.cert}</div>` : ''}
+                    ${m.phone ? `<div><span class="text-gray-400">电话：</span>${m.phone}</div>` : ''}
+                    ${m.years ? `<div><span class="text-gray-400">从业：</span>${m.years} 年</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function loadTeam() {
+        try {
+            const res = await fetch(`${API_URL}/team`);
+            const data = await res.json();
+            const members = Array.isArray(data) ? data : data.members || data.data || [];
+            renderMembers(members);
+        } catch (e) {
+            console.log('加载演示数据');
+            renderMembers(demoMembers);
+        }
+    }
+
+    function openModal(id) {
+        document.getElementById('member-modal').classList.remove('hidden');
+        document.getElementById('member-modal').classList.add('flex');
+        if (!id) {
+            document.getElementById('modal-title').textContent = '添加人员';
+            document.getElementById('member-form').reset();
+            document.getElementById('member-id').value = '';
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('member-modal').classList.add('hidden');
+        document.getElementById('member-modal').classList.remove('flex');
+    }
+
+    function editMember(id) {
+        const member = demoMembers.find(m => m.id === id);
+        if (!member) return;
+        document.getElementById('member-id').value = member.id;
+        document.getElementById('member-name').value = member.name;
+        document.getElementById('member-role').value = member.role;
+        document.getElementById('member-phone').value = member.phone || '';
+        document.getElementById('member-title').value = member.title || '';
+        document.getElementById('member-cert').value = member.cert || '';
+        document.getElementById('member-years').value = member.years || '';
+        document.getElementById('modal-title').textContent = '编辑人员';
+        openModal(id);
+    }
+
+    async function deleteMember(id) {
+        if (!confirm('确定删除该成员？')) return;
+        try {
+            await fetch(`${API_URL}/team/${id}`, { method: 'DELETE' });
+            loadTeam();
+        } catch (e) {
+            alert('演示模式：删除成功');
+            loadTeam();
+        }
+    }
+
+    document.getElementById('member-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('member-name').value,
+            role: document.getElementById('member-role').value,
+            phone: document.getElementById('member-phone').value,
+            title: document.getElementById('member-title').value,
+            cert: document.getElementById('member-cert').value,
+            years: document.getElementById('member-years').value,
+        };
+        try {
+            await fetch(`${API_URL}/team`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            closeModal();
+            loadTeam();
+        } catch (err) {
+            console.error('保存失败:', err);
+            alert('演示模式：已保存');
+            closeModal();
+            loadTeam();
+        }
+    });
+
+    document.getElementById('filter-role').addEventListener('change', e => {
+        const role = e.target.value;
+        if (!role) { renderMembers(demoMembers); return; }
+        renderMembers(demoMembers.filter(m => m.role === role));
+    });
+
+    document.addEventListener('DOMContentLoaded', loadTeam);
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+    </script>
+
+    <!-- API Key Settings UI -->
+    <div id="api-key-settings" style="position:fixed;top:70px;right:16px;z-index:9999;">
+      <button onclick="document.getElementById('api-key-modal').classList.remove('hidden')" style="background:#3B82F6;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="设置 API Key">⚙</button>
+    </div>
+    <div id="api-key-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;">
+      <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 12px;font-size:18px;">🔑 设置 API Key</h3>
+        <p style="color:#666;font-size:13px;margin:0 0 12px;">请输入你的 API Key（存储在浏览器本地）</p>
+        <input id="api-key-input" type="text" placeholder="输入 API Key..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button onclick="document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');" style="padding:8px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;">取消</button>
+          <button onclick="(function(){const v=document.getElementById('api-key-input').value;if(v.trim()){localStorage.setItem('api_key',v.trim());alert('✅ API Key 已保存');}document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');})()" style="padding:8px 16px;border:none;border-radius:6px;background:#3B82F6;color:#fff;cursor:pointer;font-weight:600;">保存</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>

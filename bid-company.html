@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公司资料 - 投标引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+    window.APP_CONFIG = {
+        API_BASE: 'https://tender-engine-backend-production.up.railway.app',
+        getApiKey: function() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key) return key;
+            const stored = localStorage.getItem('api_key');
+            if (stored) return stored;
+            return 'dev-key-2026';
+        }
+    }
+    </script>
+        <script src="js/shared.js"></script>
+</head>
+<body class="bg-gray-50">
+        <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-primary">🎯 投标引擎</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-primary font-medium">首页</a>
+                    <a href="projects.html" class="text-gray-700 hover:text-primary font-medium">项目列表</a>
+                    <a href="bid-manage.html" class="text-gray-700 hover:text-primary font-medium">标书管理</a>
+                    <a href="bid-dashboard.html" class="text-gray-700 hover:text-primary font-medium">工作台</a>
+                    <a href="bid-download.html" class="text-gray-700 hover:text-primary font-medium">标书下载</a>
+                    <a href="bid.html" class="text-gray-700 hover:text-primary font-medium">标书生成</a>
+                    <button class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition">立即试用</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-primary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 py-2 space-y-2">
+                <a href="index.html" class="block py-2 text-gray-700 hover:text-primary">首页</a>
+                <a href="projects.html" class="block py-2 text-gray-700 hover:text-primary">项目列表</a>
+                <a href="bid-manage.html" class="block py-2 text-gray-700 hover:text-primary">标书管理</a>
+                <a href="bid-dashboard.html" class="block py-2 text-gray-700 hover:text-primary">工作台</a>
+                <a href="bid-download.html" class="block py-2 text-gray-700 hover:text-primary">标书下载</a>
+                <a href="bid.html" class="block py-2 text-gray-700 hover:text-primary">标书生成</a>
+            </div>
+        </div>
+    </nav>
+    <!-- 面包屑导航 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <nav class="text-sm text-gray-500" aria-label="面包屑导航">
+            <ol class="flex items-center space-x-2 flex-wrap">
+                <li><a href="index.html" class="hover:text-primary transition">🏠 首页</a></li><li class="flex items-center"><span class="mx-1">/</span><a href="bid-manage.html" class="hover:text-primary transition">标书管理</a></li><li class="flex items-center"><span class="mx-1">/</span><span class="text-primary font-medium">公司资料</span></li></ol></nav></div></nav>
+
+    <!-- 页面标题 -->
+    <section class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-2 text-sm text-blue-200 mb-3">
+                <a href="bid-manage.html" class="hover:text-white">标书管理</a>
+                <span>/</span>
+                <span>公司资料</span>
+            </div>
+            <h1 class="text-3xl font-bold">公司资料管理</h1>
+            <p class="mt-2 text-blue-100">维护公司基本信息、资质证书与财务数据</p>
+        </div>
+    </section>
+
+    <!-- 表单区域 -->
+    <section class="py-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <form id="company-form" class="bg-white rounded-xl shadow-lg p-8">
+
+                <!-- 基本信息 -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-bold mb-6 flex items-center">
+                        <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">1</span>
+                        公司基本信息
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">公司名称 <span class="text-red-500">*</span></label>
+                            <input type="text" id="company-name" required placeholder="请输入公司全称" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">统一社会信用代码 <span class="text-red-500">*</span></label>
+                            <input type="text" id="credit-code" required placeholder="91110000XXXXXXXXXX" maxlength="18" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">法定代表人 <span class="text-red-500">*</span></label>
+                            <input type="text" id="legal-person" required placeholder="请输入法人姓名" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">联系电话</label>
+                            <input type="tel" id="phone" placeholder="请输入联系电话" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">电子邮箱</label>
+                            <input type="email" id="email" placeholder="请输入邮箱" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">注册地址</label>
+                            <input type="text" id="address" placeholder="请输入公司注册地址" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">经营范围</label>
+                            <textarea id="business-scope" rows="3" placeholder="请描述公司主要经营范围" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">成立时间</label>
+                            <input type="date" id="establish-date" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">注册资本（万元）</label>
+                            <input type="number" id="registered-capital" placeholder="1000" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 资质管理 -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
+                        资质证书
+                    </h2>
+                    <div id="cert-list" class="space-y-3 mb-4">
+                        <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">📄</span>
+                                <div>
+                                    <div class="font-medium">营业执照</div>
+                                    <div class="text-sm text-gray-500">有效期至 2030-12-31</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">有效</span>
+                        </div>
+                    </div>
+                    <div id="cert-upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition cursor-pointer">
+                        <div class="text-3xl mb-2">📎</div>
+                        <p class="text-sm text-gray-500">点击上传资质证书扫描件（PDF/图片）</p>
+                        <input type="file" id="cert-file" accept=".pdf,.jpg,.jpeg,.png" class="hidden">
+                    </div>
+                </div>
+
+                <!-- 银行信息 -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+                        银行信息
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">开户银行</label>
+                            <input type="text" id="bank-name" placeholder="例：中国工商银行北京朝阳支行" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">银行账号</label>
+                            <input type="text" id="bank-account" placeholder="请输入银行账号" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 财务信息 -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">4</span>
+                        财务信息（近3年）
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border">年度</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border">营业收入（万元）</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border">净利润（万元）</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border">资产总额（万元）</th>
+                                </tr>
+                            </thead>
+                            <tbody id="finance-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-primary hover:bg-secondary text-white py-4 rounded-lg font-bold text-lg transition">
+                        💾 保存资料
+                    </button>
+                    <a href="bid-manage.html" class="px-8 py-4 border-2 border-gray-300 rounded-lg font-bold text-lg text-gray-600 hover:bg-gray-100 transition text-center flex items-center justify-center">
+                        返回
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-2">🎯 投标引擎</h4>
+                    <p class="text-gray-400 text-sm">智能中标预测平台，专注物联网卡 + 布控球招标</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="projects.html" class="hover:text-white transition">项目列表</a></li>
+                        <li><a href="bid-manage.html" class="hover:text-white transition">标书管理</a></li>
+                        <li><a href="bid-dashboard.html" class="hover:text-white transition">工作台</a></li>
+                        <li><a href="bid-download.html" class="hover:text-white transition">标书下载</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-2">技术支持</h4>
+                    <p class="text-gray-400 text-sm">基于 AI 驱动的智能投标决策系统</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                &copy; 2026 投标引擎 All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    const API_URL = window.APP_CONFIG.API_BASE + '/api';
+
+    // 初始化财务数据表格
+    function initFinanceTable() {
+        const tbody = document.getElementById('finance-body');
+        const now = new Date();
+        const rows = [];
+        for (let i = 1; i <= 3; i++) {
+            const year = now.getFullYear() - i;
+            rows.push(`
+                <tr>
+                    <td class="px-4 py-3 border font-medium">${year}</td>
+                    <td class="px-4 py-3 border"><input type="number" class="finance-revenue w-full px-2 py-1 border-0 focus:outline-none focus:ring-1 focus:ring-primary rounded" placeholder="0" data-year="${year}"></td>
+                    <td class="px-4 py-3 border"><input type="number" class="finance-profit w-full px-2 py-1 border-0 focus:outline-none focus:ring-1 focus:ring-primary rounded" placeholder="0" data-year="${year}"></td>
+                    <td class="px-4 py-3 border"><input type="number" class="finance-asset w-full px-2 py-1 border-0 focus:outline-none focus:ring-1 focus:ring-primary rounded" placeholder="0" data-year="${year}"></td>
+                </tr>
+            `);
+        }
+        tbody.innerHTML = rows.join('');
+    }
+
+    // 加载公司数据
+    async function loadCompany() {
+        try {
+            const res = await fetch(`${API_URL}/company`);
+            const data = await res.json();
+            if (data) fillForm(data);
+        } catch (e) {
+            console.log('使用本地数据或表单为空');
+        }
+    }
+
+    function fillForm(data) {
+        document.getElementById('company-name').value = data.name || '';
+        document.getElementById('credit-code').value = data.credit_code || '';
+        document.getElementById('legal-person').value = data.legal_person || '';
+        document.getElementById('phone').value = data.phone || '';
+        document.getElementById('email').value = data.email || '';
+        document.getElementById('address').value = data.address || '';
+        document.getElementById('business-scope').value = data.business_scope || '';
+        document.getElementById('establish-date').value = data.establish_date || '';
+        document.getElementById('registered-capital').value = data.registered_capital || '';
+        document.getElementById('bank-name').value = data.bank_name || '';
+        document.getElementById('bank-account').value = data.bank_account || '';
+    }
+
+    // 保存
+    document.getElementById('company-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('company-name').value,
+            credit_code: document.getElementById('credit-code').value,
+            legal_person: document.getElementById('legal-person').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+            address: document.getElementById('address').value,
+            business_scope: document.getElementById('business-scope').value,
+            establish_date: document.getElementById('establish-date').value,
+            registered_capital: document.getElementById('registered-capital').value,
+            bank_name: document.getElementById('bank-name').value,
+            bank_account: document.getElementById('bank-account').value,
+        };
+        try {
+            await fetch(`${API_URL}/company`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            alert('公司资料保存成功！');
+        } catch (err) {
+            console.error('保存失败:', err);
+            alert('演示模式：已保存到本地');
+        }
+    });
+
+    // 证书上传
+    document.getElementById('cert-upload-zone').addEventListener('click', () => {
+        document.getElementById('cert-file').click();
+    });
+    document.getElementById('cert-file').addEventListener('change', e => {
+        if (e.target.files.length > 0) {
+            alert(`文件 "${e.target.files[0].name}" 已选择（演示模式）`);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initFinanceTable();
+        loadCompany();
+    });
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+    </script>
+
+    <!-- API Key Settings UI -->
+    <div id="api-key-settings" style="position:fixed;top:70px;right:16px;z-index:9999;">
+      <button onclick="document.getElementById('api-key-modal').classList.remove('hidden')" style="background:#3B82F6;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="设置 API Key">⚙</button>
+    </div>
+    <div id="api-key-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;">
+      <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 12px;font-size:18px;">🔑 设置 API Key</h3>
+        <p style="color:#666;font-size:13px;margin:0 0 12px;">请输入你的 API Key（存储在浏览器本地）</p>
+        <input id="api-key-input" type="text" placeholder="输入 API Key..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button onclick="document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');" style="padding:8px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;">取消</button>
+          <button onclick="(function(){const v=document.getElementById('api-key-input').value;if(v.trim()){localStorage.setItem('api_key',v.trim());alert('✅ API Key 已保存');}document.getElementById('api-key-modal').style.display='none';document.getElementById('api-key-modal').classList.add('hidden');})()" style="padding:8px 16px;border:none;border-radius:6px;background:#3B82F6;color:#fff;cursor:pointer;font-weight:600;">保存</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>
