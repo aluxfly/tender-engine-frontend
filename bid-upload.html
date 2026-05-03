@@ -118,12 +118,12 @@
                         <option value="">— 创建新项目 —</option>
                     </select>
                 </div>
-                <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-primary hover:bg-blue-50/30 transition cursor-pointer">
-                    <div class="text-6xl mb-4">📁</div>
-                    <p class="text-gray-600 mb-2 font-medium text-lg">拖拽文件到此处，或点击选择</p>
-                    <p class="text-sm text-gray-400">支持 PDF、DOC、DOCX，单个文件不超过 50MB</p>
-                </div>
-                <input type="file" id="file-input" accept=".pdf,.doc,.docx" multiple style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
+                <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-primary transition cursor-pointer">
+                        <div class="text-5xl mb-4">📤</div>
+                        <p class="text-gray-600 mb-2 font-medium">拖拽文件到此处，或点击选择</p>
+                        <p class="text-sm text-gray-400">支持 PDF、DOC、DOCX，单个文件不超过 50MB</p>
+                        <input type="file" id="file-input" accept=".pdf,.doc,.docx" class="hidden">
+                    </div>
                 <div id="file-list" class="mt-4 space-y-2"></div>
                 <div id="upload-progress" class="mt-4 hidden">
                     <div class="flex justify-between text-sm text-gray-600 mb-1">
@@ -284,19 +284,13 @@ let uploadedFiles = [];
     loadProjects();
 
     // 拖拽上传
-    dropZone.addEventListener('click', (e) => {
-        e.preventDefault();
-        fileInput.click();
-    });
-    fileInput.addEventListener('change', (e) => {
-        handleFiles(e.target.files);
-        fileInput.value = ''; // 重置，允许重复选择同一文件
-    });
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-primary', 'bg-blue-50/50'); });
-    dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-primary', 'bg-blue-50/50'); });
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-primary', 'bg-blue-50'); });
+    dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-primary', 'bg-blue-50'); });
     dropZone.addEventListener('drop', e => {
         e.preventDefault();
-        dropZone.classList.remove('border-primary', 'bg-blue-50/50');
+        dropZone.classList.remove('border-primary', 'bg-blue-50');
         handleFiles(e.dataTransfer.files);
     });
 
