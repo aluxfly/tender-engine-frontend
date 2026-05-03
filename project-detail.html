@@ -169,7 +169,7 @@
         }
 
         try {
-            const resp = await fetch(`${API_BASE}/api/projects?limit=500`);
+            const resp = await fetch(`${window.API_URL}/projects?limit=500`);
             const projects = await resp.json();
             const project = projects.find(p => p.id == id);
 
