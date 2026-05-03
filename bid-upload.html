@@ -122,8 +122,8 @@
                     <div class="text-6xl mb-4">📁</div>
                     <p class="text-gray-600 mb-2 font-medium text-lg">拖拽文件到此处，或点击选择</p>
                     <p class="text-sm text-gray-400">支持 PDF、DOC、DOCX，单个文件不超过 50MB</p>
-                    <input type="file" id="file-input" accept=".pdf,.doc,.docx" class="hidden" multiple>
                 </div>
+                <input type="file" id="file-input" accept=".pdf,.doc,.docx" multiple style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
                 <div id="file-list" class="mt-4 space-y-2"></div>
                 <div id="upload-progress" class="mt-4 hidden">
                     <div class="flex justify-between text-sm text-gray-600 mb-1">
@@ -286,22 +286,11 @@ let uploadedFiles = [];
     // 拖拽上传
     dropZone.addEventListener('click', (e) => {
         e.preventDefault();
-        e.stopPropagation();
-        if (fileInput) {
-            fileInput.style.display = 'block';
-            fileInput.style.position = 'absolute';
-            fileInput.style.opacity = '0';
-            fileInput.style.width = '1px';
-            fileInput.style.height = '1px';
-            fileInput.click();
-            setTimeout(() => {
-                fileInput.style.display = '';
-                fileInput.style.position = '';
-                fileInput.style.opacity = '';
-                fileInput.style.width = '';
-                fileInput.style.height = '';
-            }, 100);
-        }
+        fileInput.click();
+    });
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+        fileInput.value = ''; // 重置，允许重复选择同一文件
     });
     dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-primary', 'bg-blue-50/50'); });
     dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-primary', 'bg-blue-50/50'); });
@@ -310,7 +299,6 @@ let uploadedFiles = [];
         dropZone.classList.remove('border-primary', 'bg-blue-50/50');
         handleFiles(e.dataTransfer.files);
     });
-    fileInput.addEventListener('change', e => handleFiles(e.target.files));
 
     function handleFiles(files) {
         Array.from(files).forEach(file => {
