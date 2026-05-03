@@ -180,7 +180,14 @@
 
             document.getElementById('project-title').textContent = project.name || project.title || '未知项目';
             document.getElementById('category-tag').textContent = project.category || '电力招标';
-            document.getElementById('source-tag').textContent = project.source || project.source_site || '国家电网';
+            const url = (project.source_url || '').toLowerCase();
+            if (url.includes('sgccetp.com.cn') || (project.source || '').includes('电工交易专区')) {
+                document.getElementById('source-tag').textContent = '电工交易专区';
+            } else if (url.includes('ecp.sgcc.com.cn') || (project.source || '').includes('电子商务平台') || (project.source || '').includes('ECP')) {
+                document.getElementById('source-tag').textContent = '电子商务平台(ECP)';
+            } else {
+                document.getElementById('source-tag').textContent = project.source || project.source_site || '未知';
+            }
             document.getElementById('budget').textContent = project.budget ? `¥ ${(project.budget/10000).toFixed(0)}万` : '面议';
             document.getElementById('location').textContent = project.location || project.region || '-';
             document.getElementById('deadline').textContent = project.deadline || '待定';
