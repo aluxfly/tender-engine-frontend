@@ -284,7 +284,25 @@ let uploadedFiles = [];
     loadProjects();
 
     // 拖拽上传
-    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (fileInput) {
+            fileInput.style.display = 'block';
+            fileInput.style.position = 'absolute';
+            fileInput.style.opacity = '0';
+            fileInput.style.width = '1px';
+            fileInput.style.height = '1px';
+            fileInput.click();
+            setTimeout(() => {
+                fileInput.style.display = '';
+                fileInput.style.position = '';
+                fileInput.style.opacity = '';
+                fileInput.style.width = '';
+                fileInput.style.height = '';
+            }, 100);
+        }
+    });
     dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-primary', 'bg-blue-50/50'); });
     dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-primary', 'bg-blue-50/50'); });
     dropZone.addEventListener('drop', e => {
