@@ -353,7 +353,6 @@ let uploadedFiles = [];
             if (data.status === 'error' || data.code) {
                 throw new Error(data.message || '文件解析失败');
             }
-            clearInterval(anim);
             progressBar.style.width = '100%';
             progressPercent.textContent = '100%';
             progressText.textContent = '上传完成，正在解析...';
