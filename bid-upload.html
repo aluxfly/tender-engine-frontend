@@ -333,7 +333,8 @@ let uploadedFiles = [];
 
         try {
             const formData = new FormData();
-            uploadedFiles.forEach(f => formData.append('files', f));
+            // 后端接口只接受单文件，字段名为 'file'
+            formData.append('file', uploadedFiles[0]);
             const projectId = document.getElementById('project-select').value;
             if (projectId) formData.append('project_id', projectId);
 
