@@ -284,7 +284,7 @@ let uploadedFiles = [];
     loadProjects();
 
     // 拖拽上传
-    dropZone.addEventListener('click', () => fileInput.click());
+    // drop-zone 是 <label for="file-input">，原生自动触发文件选择，不需要 JS click
     fileInput.addEventListener('change', e => handleFiles(e.target.files));
     dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-primary', 'bg-blue-50'); });
     dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-primary', 'bg-blue-50'); });
