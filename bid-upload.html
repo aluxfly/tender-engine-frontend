@@ -344,11 +344,15 @@ let uploadedFiles = [];
                 body: formData,
             });
 
-            // 模拟进度动画
-            let p = 0;
-            const anim = setInterval(() => { p = Math.min(p + Math.random() * 15, 90); progressBar.style.width = p + '%'; progressPercent.textContent = Math.round(p) + '%'; }, 200);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
             const data = await response.json();
+
+            if (data.status === 'error' || data.code) {
+                throw new Error(data.message || '文件解析失败');
+            }
             clearInterval(anim);
             progressBar.style.width = '100%';
             progressPercent.textContent = '100%';
@@ -366,26 +370,39 @@ let uploadedFiles = [];
             progressText.textContent = '演示模式：模拟上传成功';
             setTimeout(() => {
                 const demoData = {
-                    id: 'demo-' + Date.now(),
-                    project_name: '示例：智慧园区物联网卡采购项目',
-                    bid_number: 'ZB-2026-0501',
-                    deadline: '2026-06-15 14:00:00',
-                    type: '货物采购',
-                    organizer: '北京市朝阳区科技园区管委会',
-                    chapters: [
-                        '第一章 招标公告',
-                        '第二章 投标人须知',
-                        '第三章 评标办法',
-                        '第四章 合同条款及格式',
-                        '第五章 技术标准和要求',
-                        '第六章 投标文件格式',
-                        '第七章 工程量清单'
-                    ],
-                    tables: [
-                        { title: '评分标准', headers: ['评分项', '分值', '评分标准'], rows: [['技术方案', '30分', '根据方案的完整性、可行性评分'], ['商务报价', '40分', '合理低价法'], ['企业资质', '15分', '根据资质等级评分'], ['业绩经验', '10分', '近3年类似项目业绩'], ['团队配置', '5分', '项目经理及团队资历']] },
-                        { title: '废标条款', headers: ['条款编号', '废标条件'], rows: [['★3.2.1', '未提供有效的营业执照'], ['★3.2.5', '投标有效期不足90天'], ['★3.3.2', '未按要求缴纳投标保证金']]] }
-                    ],
-                    status: 'parsed'
+                    status: 'success',
+                    message: '文件解析成功',
+                    key_info: {
+                        project_name: '示例：智慧园区物联网卡采购项目',
+                        bid_number: 'ZB-2026-0501',
+                        deadline: '2026-06-15 14:00:00',
+                        buyer: '北京市朝阳区科技园区管委会',
+                        budget: '500万元'
+                    },
+                    parsed_summary: {
+                        file_type: 'docx',
+                        structure_items: 7,
+                        tables_count: 2
+                    },
+                    data: {
+                        id: 'demo-' + Date.now(),
+                        parsed_data: {
+                            key_info: {},
+                            structure: [
+                                { text: '第一章 招标公告', type: 'heading', level: 1 },
+                                { text: '第二章 投标人须知', type: 'heading', level: 1 },
+                                { text: '第三章 评标办法', type: 'heading', level: 1 },
+                                { text: '第四章 合同条款及格式', type: 'heading', level: 1 },
+                                { text: '第五章 技术标准和要求', type: 'heading', level: 1 },
+                                { text: '第六章 投标文件格式', type: 'heading', level: 1 },
+                                { text: '第七章 工程量清单', type: 'heading', level: 1 }
+                            ],
+                            tables: [
+                                { title: '评分标准', headers: ['评分项', '分值', '评分标准'], rows: [['技术方案', '30分', '根据方案的完整性、可行性评分'], ['商务报价', '40分', '合理低价法'], ['企业资质', '15分', '根据资质等级评分'], ['业绩经验', '10分', '近3年类似项目业绩'], ['团队配置', '5分', '项目经理及团队资历']] },
+                                { title: '废标条款', headers: ['条款编号', '废标条件'], rows: [['★3.2.1', '未提供有效的营业执照'], ['★3.2.5', '投标有效期不足90天'], ['★3.3.2', '未按要求缴纳投标保证金']] }
+                            ]
+                        }
+                    }
                 };
                 showResult(demoData);
             }, 1000);
@@ -403,28 +420,32 @@ let uploadedFiles = [];
         document.getElementById('step-2-indicator').querySelector('span').classList.remove('bg-gray-300', 'text-gray-600');
         document.getElementById('step-2-indicator').querySelector('span').classList.add('bg-primary', 'text-white');
 
-        // 基本信息
-        document.getElementById('res-project-name').textContent = data.project_name || data.projectName || data.name || '—';
-        document.getElementById('res-project-code').textContent = data.bid_number || data.bidNumber || data.code || '—';
-        document.getElementById('res-deadline').textContent = data.deadline || data.bidDeadline || data.dueDate || '—';
-        document.getElementById('res-type').textContent = data.type || data.category || '—';
-        document.getElementById('res-organizer').textContent = data.organizer || data.publisher || '—';
+        // 从 key_info 提取基本信息
+        const keyInfo = data.key_info || {};
+        document.getElementById('res-project-name').textContent = keyInfo.project_name || '—';
+        document.getElementById('res-project-code').textContent = keyInfo.bid_number || '—';
+        document.getElementById('res-deadline').textContent = keyInfo.deadline || '—';
+        document.getElementById('res-type').textContent = data.parsed_summary?.file_type?.toUpperCase() || '—';
+        document.getElementById('res-organizer').textContent = keyInfo.buyer || keyInfo.agency || '—';
 
-        // 章节结构
+        // 从 structure 提取章节（heading 类型）
         const chaptersEl = document.getElementById('res-chapters');
-        const chapters = data.chapters || [];
-        if (chapters.length > 0) {
-            chaptersEl.innerHTML = chapters.map((ch, i) => `
+        const structure = data.data?.parsed_data?.structure || [];
+        const headings = structure.filter(item => item.type === 'heading');
+        if (headings.length > 0) {
+            chaptersEl.innerHTML = headings.map((ch, i) => `
                 <div class="flex items-center p-3 bg-gray-50 rounded-lg">
                     <span class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold mr-3">${i + 1}</span>
-                    <span class="text-sm text-gray-700">${ch}</span>
+                    <span class="text-sm text-gray-700">${ch.text}</span>
                 </div>
             `).join('');
+        } else {
+            chaptersEl.innerHTML = '<p class="text-gray-400 text-sm">—</p>';
         }
 
-        // 提取的表格
+        // 提取表格
         const tablesEl = document.getElementById('res-tables');
-        const tables = data.tables || [];
+        const tables = data.data?.parsed_data?.tables || [];
         document.getElementById('res-table-count').textContent = tables.length > 0 ? `（共 ${tables.length} 个表格）` : '';
         if (tables.length > 0) {
             tablesEl.innerHTML = tables.map(t => `
@@ -442,10 +463,12 @@ let uploadedFiles = [];
                     </div>
                 </div>
             `).join('');
+        } else {
+            tablesEl.innerHTML = '<p class="text-gray-400 text-sm">—</p>';
         }
 
         // 存储 project_id 供后续页面使用
-        window._projectId = data.id || data.project_id || data.projectId;
+        window._projectId = data.data?.id || data.project_id;
     }
 
     // 下一步
