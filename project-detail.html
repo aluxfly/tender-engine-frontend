@@ -98,6 +98,45 @@
                 </div>
             </div>
 
+            <!-- 项目详细信息 -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-lg font-bold mb-6">📌 项目信息</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex items-start gap-3">
+                        <span class="text-gray-400 text-sm font-medium w-28 flex-shrink-0">项目名称</span>
+                        <span id="info-project-name" class="text-gray-800 font-medium"></span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-gray-400 text-sm font-medium w-28 flex-shrink-0">项目编号</span>
+                        <span id="info-project-number" class="text-gray-800 font-medium"></span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-gray-400 text-sm font-medium w-28 flex-shrink-0">招标人</span>
+                        <span id="info-tenderer" class="text-gray-800 font-medium"></span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-gray-400 text-sm font-medium w-28 flex-shrink-0">地区</span>
+                        <span id="info-region" class="text-gray-800 font-medium"></span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-gray-400 text-sm font-medium w-28 flex-shrink-0">发布日期</span>
+                        <span id="info-publish-date" class="text-gray-800 font-medium"></span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-gray-400 text-sm font-medium w-28 flex-shrink-0">招标文件获取截止</span>
+                        <span id="info-bid-doc-deadline" class="text-gray-800 font-medium"></span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-gray-400 text-sm font-medium w-28 flex-shrink-0">开标（截标）时间</span>
+                        <span id="info-bid-open-time" class="text-gray-800 font-medium"></span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-gray-400 text-sm font-medium w-28 flex-shrink-0">预算金额</span>
+                        <span id="info-budget" class="text-primary font-bold"></span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 项目描述 -->
             <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
                 <h2 class="text-lg font-bold mb-4">📋 项目描述</h2>
@@ -193,6 +232,16 @@
             document.getElementById('deadline').textContent = project.deadline || '待定';
             document.getElementById('publish-date').textContent = project.publish_date || '-';
             document.getElementById('description').textContent = project.description || project.name || '';
+
+            // 填充新增的项目信息字段
+            document.getElementById('info-project-name').textContent = project.name || project.title || '-';
+            document.getElementById('info-project-number').textContent = project.project_code || project.project_number || (project.id ? `BID-${project.id}` : '-');
+            document.getElementById('info-tenderer').textContent = project.tenderer || project.purchaser || project.company || '-';
+            document.getElementById('info-region').textContent = project.region || project.location || '-';
+            document.getElementById('info-publish-date').textContent = project.publish_date || '-';
+            document.getElementById('info-bid-doc-deadline').textContent = project.bid_doc_deadline || '-';
+            document.getElementById('info-bid-open-time').textContent = project.bid_open_time || project.deadline || '-';
+            document.getElementById('info-budget').textContent = project.budget ? `¥ ${(project.budget/10000).toFixed(0)}万` : '面议';
 
             const sourceUrl = project.source_url;
             const sourceUrlEl = document.getElementById('source-url');
