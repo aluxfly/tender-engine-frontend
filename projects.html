@@ -100,9 +100,8 @@
                         <select id="projectType" onchange="applyFilters()"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
                             <option value="">全部类型</option>
-                            <option value="物联网卡">物联网卡</option>
-                            <option value="布控球">布控球</option>
-                            <option value="电力设备">电力设备</option>
+                            <option value="电工交易专区">电工交易专区</option>
+                            <option value="ECP平台">ECP平台</option>
                         </select>
                     </div>
                     <!-- 地区筛选 -->
@@ -278,11 +277,19 @@
                 const terms = keywords.split(/\s+/).filter(t => t);
                 if (terms.some(term => !searchText.includes(term))) return false;
             }
-            // 项目类型：category 字段精确匹配，或关键词匹配 name/description
+            // 项目类型：source_site 字段匹配（电工交易专区 / ECP平台）
             if (projectType) {
-                const matchesCategory = p.category === projectType;
-                const matchesNameDesc = `${p.name} ${p.description}`.includes(projectType);
-                if (!matchesCategory && !matchesNameDesc) return false;
+                const ss = p.source_site || '';
+                if (projectType === '电工交易专区') {
+                    if (!ss.includes('电工交易专区') && !ss.includes('ETP')) return false;
+                } else if (projectType === 'ECP平台') {
+                    if (!ss.includes('电子商务平台') && !ss.includes('ECP') || ss.includes('电工交易专区')) return false;
+                } else {
+                    // 其他类型走 category 或关键词匹配
+                    const matchesCategory = p.category === projectType;
+                    const matchesNameDesc = `${p.name} ${p.description}`.includes(projectType);
+                    if (!matchesCategory && !matchesNameDesc) return false;
+                }
             }
             // 地区筛选
             if (region && p.location !== region) return false;
